@@ -7,27 +7,35 @@ export interface ICourse extends Document {
   code: string
   credits: number
   description?: string
-  prerequisites?: mongoose.Types.ObjectId
-  capacity?: number
+  enrolledStudents: mongoose.Types.ObjectId[]
   semester?: string
   teacherId?: mongoose.Types.ObjectId
 }
 
-const CourseSchema: Schema = new Schema({
-  collegeId: { type: Schema.Types.ObjectId, ref: "College", required: true },
-  departmentId: {
-    type: Schema.Types.ObjectId,
-    ref: "Department",
-    required: true,
+const CourseSchema: Schema = new Schema(
+  {
+    collegeId: {
+      type: Schema.Types.ObjectId,
+      ref: "College",
+      required: true,
+      index: true,
+    },
+    departmentId: {
+      type: Schema.Types.ObjectId,
+      ref: "Department",
+      required: true,
+      index: true,
+    },
+    name: { type: String, required: true },
+    code: { type: String, required: true, unique: true },
+    credits: { type: Number, required: true, default: 3 },
+    description: { type: String },
+    enrolledStudents: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    prerequisites: [{ type: Schema.Types.ObjectId, ref: "Course" }],
+    capacity: { type: Number },
+    semester: { type: String },
   },
-  name: { type: String, required: true },
-  code: { type: String, required: true, unique: true },
-  credits: { type: Number, required: true, default: 3 },
-  description: { type: String },
-  prerequisites: [{ type: Schema.Types.ObjectId, ref: "Course" }],
-  capacity: { type: Number },
-  semester: { type: String },
-  teacherId: { type: Schema.Types.ObjectId, ref: "Teacher" },
-})
+  { timestamps: true }
+)
 
 export default mongoose.model<ICourse>("Course", CourseSchema)

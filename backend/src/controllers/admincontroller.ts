@@ -5,14 +5,8 @@ import Course from "../models/Course"
 import Department from "../models/Department"
 import JobPosting from "../models/JobPosting"
 import User, { UserRole } from "../models/user"
-
-const createUserSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
-  password: z.string().min(6),
-  role: z.enum([UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT]),
-  college: z.string(),
-})
+import College from "../models/College"
+import mongoose from "mongoose"
 
 const updateUserSchema = z.object({
   name: z.string().min(2).optional(),
@@ -21,6 +15,95 @@ const updateUserSchema = z.object({
   role: z.enum([UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT]).optional(),
   college: z.string().optional(),
 })
+const createUserSchema = z.object({
+  name: z.string().min(2),
+  email: z.string().email(),
+  password: z.string().min(6),
+  role: z.enum([UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT]),
+  department: z.string().optional(),
+})
+
+export const createUser = async (req: Request, res: Response): Promise<any> => {
+  try {
+    console.log(req.body)
+
+    const validatedData = createUserSchema.parse(req.body)
+    const { name, email, password, role, department } = validatedData
+
+    const collegeId = req.params.collegeId as string
+    console.log("Received collegeid:", collegeId)
+    if (!collegeId) {
+      return res
+        .status(400)
+        .json({ message: "College ID is required in the URL" })
+    }
+
+    if (
+      (role === UserRole.TEACHER || role === UserRole.STUDENT) &&
+      !department
+    ) {
+      return res
+        .status(400)
+        .json({ message: "Department is required for teacher and student" })
+    }
+
+    const existingUser = await User.findOne({ email })
+    if (existingUser) {
+      return res.status(409).json({ message: "Email already exists" })
+    }
+
+    const collegeObjId = new mongoose.Types.ObjectId(collegeId)
+
+    const newUser = new User({
+      name,
+      email,
+      password,
+      role,
+      college: collegeObjId,
+      department: role === UserRole.ADMIN ? undefined : department,
+    })
+
+    await newUser.save()
+
+    if (role === UserRole.TEACHER || role === UserRole.STUDENT) {
+      await Department.findByIdAndUpdate(
+        department,
+        {
+          $push: {
+            [role === UserRole.TEACHER ? "teachers" : "students"]: newUser._id,
+          },
+        },
+        { new: true }
+      )
+    }
+
+    let collegeField = ""
+    if (role === UserRole.ADMIN) {
+      collegeField = "admins"
+    } else if (role === UserRole.TEACHER) {
+      collegeField = "teachers"
+    } else if (role === UserRole.STUDENT) {
+      collegeField = "students"
+    }
+
+    await College.findByIdAndUpdate(
+      collegeObjId,
+      { $push: { [collegeField]: newUser._id } },
+      { new: true }
+    )
+
+    return res.status(201).json(newUser)
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      return res
+        .status(400)
+        .json({ message: "Invalid input data", errors: error.errors })
+    }
+    console.error("Error creating user:", error)
+    return res.status(500).json({ message: "Internal server error" })
+  }
+}
+
 export const getStudents = async (
   req: Request,
   res: Response
@@ -101,37 +184,6 @@ export const getUserById = async (
     return res.json(user)
   } catch (error: any) {
     console.error("Error fetching user:", error)
-    return res.status(500).json({ message: "Internal server error" })
-  }
-}
-
-export const createUser = async (req: Request, res: Response): Promise<any> => {
-  try {
-    const validatedData = createUserSchema.parse(req.body)
-    const { name, email, password, role, college } = validatedData
-
-    const existingUser = await User.findOne({ email })
-    if (existingUser) {
-      return res.status(409).json({ message: "Email already exists" })
-    }
-
-    const newUser = new User({
-      name,
-      email,
-      password,
-      role,
-      college,
-    })
-    await newUser.save()
-
-    return res.status(201).json(newUser)
-  } catch (error: any) {
-    if (error instanceof z.ZodError) {
-      return res
-        .status(400)
-        .json({ message: "Invalid input data", errors: error.errors })
-    }
-    console.error("Error creating user:", error)
     return res.status(500).json({ message: "Internal server error" })
   }
 }

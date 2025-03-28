@@ -18,9 +18,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { User, UserRoleType } from "@/lib/store"
-import { Filter, Search } from "lucide-react"
-import { useState } from "react"
+import { useAppStore, User, UserRoleType } from "@/lib/store"
+import { Filter, Plus, Search } from "lucide-react"
+import { useEffect, useState } from "react"
 import {
   Dialog,
   DialogContent,
@@ -30,17 +30,64 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
+import api from "@/lib/api"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select"
+import { toast } from "sonner"
+import { useForm } from "react-hook-form"
 
 interface UserListPageProps {
   role: UserRoleType
   users: (User & {})[]
 }
 
+const addUserFormSchema = z.object({
+  name: z.string().min(2, { message: "Name must be at least 2 characters" }),
+  email: z.string().email({ message: "Please enter a valid email address" }),
+  password: z
+    .string()
+    .min(6, { message: "Password must be at least 6 characters" }),
+  department: z.string().optional(),
+})
+
+type AddUserFormValues = z.infer<typeof addUserFormSchema>
+
 const UserListPage: React.FC<UserListPageProps> = ({ role, users }) => {
   const [searchTerm, setSearchTerm] = useState("")
   const [viewDialogOpen, setViewDialogOpen] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<(User & {}) | null>(null)
+  const [addDialogOpen, setAddDialogOpen] = useState(false)
+  const { currentUser } = useAppStore()
+  const [departments, setDepartments] = useState<
+    { _id: string; name: string }[]
+  >([])
+  const [isAddingUser, setIsAddingUser] = useState(false)
+
+  const form = useForm<AddUserFormValues>({
+    resolver: zodResolver(addUserFormSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      department: "",
+    },
+  })
 
   const filteredUsers = users.filter(
     (user) =>
@@ -57,6 +104,50 @@ const UserListPage: React.FC<UserListPageProps> = ({ role, users }) => {
   const handleEditOpen = (user: User & {}) => {
     setSelectedUser(user)
     setEditDialogOpen(true)
+  }
+
+  const handleAddOpen = () => {
+    setAddDialogOpen(true)
+    form.reset({
+      name: "",
+      email: "",
+      password: "",
+      department: "",
+    })
+  }
+
+  const handleAddClose = () => {
+    setAddDialogOpen(false)
+  }
+
+  async function handleAddUser(values: AddUserFormValues) {
+    setIsAddingUser(true)
+    try {
+      const payload: any = {
+        name: values.name,
+        email: values.email,
+        password: values.password,
+        role: role.toLowerCase(),
+      }
+      if (role === "teacher" || role === "student") {
+        payload.department = values.department
+      }
+      const response = await api.post(
+        `/admin/users/${currentUser?.collegeid}/create`,
+        payload
+      )
+      if (response.status === 201) {
+        toast(`${role} created successfully!`)
+        handleAddClose()
+      } else {
+        toast(`Failed to create ${role}.`)
+      }
+    } catch (error: any) {
+      toast(`Error creating ${role}. \ndescription: ${error.message}`)
+      console.error(error)
+    } finally {
+      setIsAddingUser(false)
+    }
   }
 
   const renderUserDialogContent = (isEditable: boolean) => {
@@ -108,87 +199,33 @@ const UserListPage: React.FC<UserListPageProps> = ({ role, users }) => {
             className="w-full col-span-3 bg-muted"
           />
         </div>
-        {selectedUser?.role === "student" && <></>}
-        {(selectedUser?.role === "admin" ||
-          selectedUser?.role === "teacher") && (
-          <>
-            {selectedUser?.departments && (
-              <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2">
-                <Label
-                  htmlFor={`${isEditable ? "edit" : "view"}-departments`}
-                  className="text-left sm:text-right"
-                >
-                  Departments
-                </Label>
-                <Input
-                  id={`${isEditable ? "edit" : "view"}-departments`}
-                  value={selectedUser?.departments.join(", ") || ""}
-                  disabled={!isEditable}
-                  className={`w-full col-span-3 ${
-                    !isEditable ? "bg-muted" : ""
-                  }`}
-                />
-              </div>
-            )}
-            {selectedUser?.admins && (
-              <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2">
-                <Label
-                  htmlFor={`${isEditable ? "edit" : "view"}-admins`}
-                  className="text-left sm:text-right"
-                >
-                  Admins
-                </Label>
-                <Input
-                  id={`${isEditable ? "edit" : "view"}-admins`}
-                  value={selectedUser?.admins.join(", ") || ""}
-                  disabled={!isEditable}
-                  className={`w-full col-span-3 ${
-                    !isEditable ? "bg-muted" : ""
-                  }`}
-                />
-              </div>
-            )}
-            {selectedUser?.teachers && (
-              <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2">
-                <Label
-                  htmlFor={`${isEditable ? "edit" : "view"}-teachers`}
-                  className="text-left sm:text-right"
-                >
-                  Teachers
-                </Label>
-                <Input
-                  id={`${isEditable ? "edit" : "view"}-teachers`}
-                  value={selectedUser?.teachers.join(", ") || ""}
-                  disabled={!isEditable}
-                  className={`w-full col-span-3 ${
-                    !isEditable ? "bg-muted" : ""
-                  }`}
-                />
-              </div>
-            )}
-            {selectedUser?.students && (
-              <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2">
-                <Label
-                  htmlFor={`${isEditable ? "edit" : "view"}-students`}
-                  className="text-left sm:text-right"
-                >
-                  Students
-                </Label>
-                <Input
-                  id={`${isEditable ? "edit" : "view"}-students`}
-                  value={selectedUser?.students.join(", ") || ""}
-                  disabled={!isEditable}
-                  className={`w-full col-span-3 ${
-                    !isEditable ? "bg-muted" : ""
-                  }`}
-                />
-              </div>
-            )}
-          </>
-        )}
       </div>
     )
   }
+
+  useEffect(() => {
+    const fetchDepartmentsByCollege = async (collegeid: string) => {
+      if (collegeid) {
+        try {
+          const response = await api.get(
+            `/auth/colleges/${collegeid}/departments`
+          )
+          if (response.status === 200 && response.data) {
+            setDepartments(response.data)
+          } else {
+            console.error("Failed to fetch departments for college:", collegeid)
+            setDepartments([])
+          }
+        } catch (error) {
+          console.error("Error fetching departments:", error)
+          setDepartments([])
+        }
+      } else {
+        setDepartments([])
+      }
+    }
+    fetchDepartmentsByCollege(currentUser?.collegeid || "")
+  }, [currentUser?.collegeid])
 
   return (
     <div className="container mx-auto px-4 py-6 space-y-6">
@@ -199,7 +236,7 @@ const UserListPage: React.FC<UserListPageProps> = ({ role, users }) => {
               <div className="relative w-full">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder={`Search by name, ID, or email...`}
+                  placeholder="Search by name, ID, or email..."
                   className="pl-10 w-full"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -209,6 +246,10 @@ const UserListPage: React.FC<UserListPageProps> = ({ role, users }) => {
                 <Filter className="h-4 w-4" />
               </Button>
             </div>
+            <Button onClick={handleAddOpen}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add {role.charAt(0).toUpperCase() + role.slice(1)}
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -332,6 +373,105 @@ const UserListPage: React.FC<UserListPageProps> = ({ role, users }) => {
             </Button>
             <Button type="submit">Save Changes</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={addDialogOpen} onOpenChange={handleAddClose}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>
+              Add New {role.charAt(0).toUpperCase() + role.slice(1)}
+            </DialogTitle>
+            <DialogDescription>
+              Create a new {role.toLowerCase()} account
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(handleAddUser)}
+              className="space-y-4"
+            >
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Full Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter full name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter email" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        placeholder="Create password"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {(role === "teacher" || role === "student") && (
+                <FormField
+                  control={form.control}
+                  name="department"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Department</FormLabel>
+                      <FormControl>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select department" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {departments.map((department) => (
+                              <SelectItem
+                                key={department._id}
+                                value={department._id}
+                              >
+                                {department.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              <DialogFooter className="sm:justify-start">
+                <Button type="submit" disabled={isAddingUser}>
+                  {isAddingUser ? `Creating ${role}...` : `Create ${role}`}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
     </div>
