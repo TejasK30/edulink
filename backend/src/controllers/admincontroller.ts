@@ -7,14 +7,16 @@ import JobPosting from "../models/JobPosting"
 import User, { UserRole } from "../models/user"
 import College from "../models/College"
 import mongoose from "mongoose"
+import Semester, { ISemester } from "../models/Semester"
+import { Types } from "mongoose"
 
 const updateUserSchema = z.object({
   name: z.string().min(2).optional(),
   email: z.string().email().optional(),
   password: z.string().min(6).optional(),
-  role: z.enum([UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT]).optional(),
-  college: z.string().optional(),
+  department: z.string().optional(),
 })
+
 const createUserSchema = z.object({
   name: z.string().min(2),
   email: z.string().email(),
@@ -190,25 +192,58 @@ export const getUserById = async (
 
 export const updateUser = async (req: Request, res: Response): Promise<any> => {
   try {
-    const validatedData = updateUserSchema.partial().parse(req.body)
-    const { name, ...rest } = validatedData
-    const updateData: any = { ...rest }
-    if (name) {
-      updateData.name = name.trim()
+    const validatedData = updateUserSchema.parse(req.body)
+
+    if (validatedData.department === "") {
+      delete validatedData.department
+    }
+
+    const existingUser = await User.findById(req.params.id)
+    if (!existingUser) {
+      return res.status(404).json({ message: "User not found" })
+    }
+
+    if (
+      (existingUser.role === UserRole.TEACHER ||
+        existingUser.role === UserRole.STUDENT) &&
+      validatedData.department
+    ) {
+      const currentDept = (existingUser as any).department
+      if (currentDept?.toString() !== validatedData.department) {
+        if (currentDept) {
+          await Department.findByIdAndUpdate(currentDept, {
+            $pull: {
+              [existingUser.role === UserRole.TEACHER
+                ? "teachers"
+                : "students"]: existingUser._id,
+            },
+          })
+        }
+        await Department.findByIdAndUpdate(validatedData.department, {
+          $push: {
+            [existingUser.role === UserRole.TEACHER ? "teachers" : "students"]:
+              existingUser._id,
+          },
+        })
+      }
+    }
+
+    const updateData: any = { ...validatedData }
+    if (updateData.name) {
+      updateData.name = updateData.name.trim()
+    }
+    if (updateData.password === "") {
+      delete updateData.password
     }
 
     const updatedUser = await User.findByIdAndUpdate(
       req.params.id,
       updateData,
-      {
-        new: true,
-      }
+      { new: true }
     )
-
     if (!updatedUser) {
       return res.status(404).json({ message: "User not found" })
     }
-
     return res.json(updatedUser)
   } catch (error: any) {
     if (error instanceof z.ZodError) {
@@ -360,5 +395,82 @@ export const createJobPosting = async (
   } catch (error: any) {
     console.error("Error posting job:", error)
     res.status(500).json({ message: "Server error while posting job" })
+  }
+}
+
+export const createSemester = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { collegeId } = req.params
+    const { departmentId, name, year, startDate, endDate, isActive } = req.body
+    if (new Date(startDate) >= new Date(endDate)) {
+      return res
+        .status(400)
+        .json({ message: "End date must be after start date." })
+    }
+    const newSemester: Partial<ISemester> = {
+      collegeId: new Types.ObjectId(collegeId),
+      departmentId: new Types.ObjectId(departmentId),
+      name,
+      year: Number(year),
+      startDate: new Date(startDate),
+      endDate: new Date(endDate),
+      isActive: isActive ?? false,
+      subjects: [],
+    }
+    const semester = await Semester.create(newSemester)
+    return res.status(201).json(semester)
+  } catch (error: any) {
+    console.error("Error creating semester:", error)
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message })
+  }
+}
+
+export const toggleSemesterStatus = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { id } = req.params
+    const { isActive } = req.body
+    if (typeof isActive !== "boolean") {
+      return res.status(400).json({ message: "isActive must be a boolean." })
+    }
+    const semester = await Semester.findByIdAndUpdate(
+      id,
+      { isActive },
+      { new: true }
+    )
+    if (!semester) {
+      return res.status(404).json({ message: "Semester not found." })
+    }
+    return res.status(200).json(semester)
+  } catch (error: any) {
+    console.error("Error updating semester:", error)
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message })
+  }
+}
+
+export const getSemestersByCollege = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { collegeId } = req.params
+    if (!collegeId)
+      return res.status(400).json({ message: "College ID is required" })
+    const semesters = await Semester.find({ collegeId })
+    return res.json(semesters)
+  } catch (error: any) {
+    console.error(error)
+    return res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message })
   }
 }

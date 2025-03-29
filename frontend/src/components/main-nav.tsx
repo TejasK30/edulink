@@ -15,7 +15,6 @@ interface MainNavProps {
 
 export function MainNav({ items }: MainNavProps) {
   const pathname = usePathname()
-  // const { user } = useAuth()
 
   return (
     <div className="flex gap-6 md:gap-10">

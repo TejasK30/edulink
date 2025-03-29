@@ -16,6 +16,8 @@ import {
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useAuth } from "@/lib/auth-provider"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -30,6 +32,7 @@ type FormValues = z.infer<typeof formSchema>
 export function LoginForm() {
   const { login } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -43,9 +46,15 @@ export function LoginForm() {
   async function onSubmit(values: FormValues) {
     setIsLoading(true)
     try {
-      await login(values.email, values.password, values.remember)
-    } catch (error) {
+      const result = await login(values.email, values.password, values.remember)
+      if (result?.success) {
+        router.push("/dashboard")
+      } else {
+        toast(result?.message || "Login failed")
+      }
+    } catch (error: any) {
       console.error(error)
+      toast(error.response?.data?.message || "Login failed")
     } finally {
       setIsLoading(false)
     }

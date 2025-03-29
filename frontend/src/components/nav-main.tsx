@@ -39,8 +39,6 @@ type NavMainProps = {
 export function NavMain({ items }: NavMainProps) {
   const pathname = usePathname()
 
-  // Determine if a parent item is active:
-  // It is active if its url matches OR one of its subitems matches.
   const isItemActive = (item: NavItem): boolean => {
     if (item.url === pathname) return true
     if (item.items && item.items.some((sub) => sub.url === pathname))
@@ -72,7 +70,6 @@ export function NavMain({ items }: NavMainProps) {
                         active ? "dark:bg-blue-500 bg-primary-purple-200" : ""
                       )}
                       onClick={(e) => {
-                        // Prevent collapsing if this parent item (or one of its subitems) is active
                         if (active) {
                           e.preventDefault()
                           e.stopPropagation()
@@ -115,7 +112,6 @@ export function NavMain({ items }: NavMainProps) {
               </Collapsible>
             )
           } else {
-            // Simple item without children
             return (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton asChild>

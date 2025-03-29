@@ -1,7 +1,5 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -12,8 +10,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { useToast } from "@/hooks/use-toast"
 import { Textarea } from "@/components/ui/textarea"
+import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
+import { toast } from "sonner"
 
 interface Department {
   _id: string
@@ -28,7 +28,6 @@ const CreateAnnouncementPage = () => {
   const [error, setError] = useState("")
   const [successMessage, setSuccessMessage] = useState("")
   const router = useRouter()
-  const { toast } = useToast()
 
   useEffect(() => {
     const fetchDepartments = async () => {
@@ -39,7 +38,7 @@ const CreateAnnouncementPage = () => {
       }
       const collegeId = localStorage.getItem("collegeId")
       if (!collegeId) {
-        toast({ title: "College ID not found.", variant: "destructive" })
+        toast("College ID not found.")
         return
       }
       try {
@@ -53,38 +52,30 @@ const CreateAnnouncementPage = () => {
         )
         if (response.ok) {
           const data = await response.json()
-          // Ensure data is an array of departments
           setDepartments(data)
         } else {
-          toast({
-            title: "Failed to fetch departments.",
-            variant: "destructive",
-          })
+          toast("Failed to fetch departments.")
         }
       } catch (err: unknown) {
         const errorMessage =
           err instanceof Error ? err.message : "Unknown error"
-        toast({
-          title: "Error fetching departments.",
-          description: errorMessage,
-          variant: "destructive",
-        })
+        toast("Error fetching departments. " + errorMessage)
         console.error(err)
       }
     }
 
     fetchDepartments()
-  }, [router, toast])
+  }, [router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
     setSuccessMessage("")
     const collegeId = localStorage.getItem("collegeId")
-    const isAdmin = localStorage.getItem("adminId") // Check if admin
+    const isAdmin = localStorage.getItem("adminId")
 
     if (!collegeId) {
-      toast({ title: "College ID not found.", variant: "destructive" })
+      toast("College ID not found.")
       return
     }
 
@@ -102,30 +93,22 @@ const CreateAnnouncementPage = () => {
           collegeId,
           title,
           content,
-          departmentId: departmentId || null, // departmentId can be null for college-wide announcements
+          departmentId: departmentId || null,
         }),
       })
 
       const data = await response.json()
 
       if (response.ok) {
-        toast({ title: "Announcement created successfully!" })
-        router.push("/admin/announcements") // Or teacher announcements page
+        toast("Announcement created successfully!")
+        router.push("/admin/announcements")
       } else {
-        toast({
-          title: "Failed to create announcement.",
-          description: data.message,
-          variant: "destructive",
-        })
+        toast("Failed to create announcement. " + data.message)
       }
     } catch (err: unknown) {
       const errorMessage =
         err instanceof Error ? err.message : "Unknown error occurred"
-      toast({
-        title: "Error creating announcement.",
-        description: errorMessage,
-        variant: "destructive",
-      })
+      toast("Error creating announcement. " + errorMessage)
       console.error(err)
     }
   }

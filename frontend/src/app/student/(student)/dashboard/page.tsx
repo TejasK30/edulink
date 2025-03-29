@@ -85,20 +85,13 @@ const StudentDashboardPage = () => {
         } else {
           const errorData = await response.json()
           setError(errorData.message || "Failed to fetch dashboard data.")
-          // toast({
-          //   title: errorData.message || "Fetch error",
-          //   variant: "destructive",
-          // })
+          toast("Failed to fetch dashboard data.")
         }
       } catch (err: unknown) {
         const errorMessage =
           err instanceof Error ? err.message : "Unknown error"
         setError("Error fetching dashboard data: " + errorMessage)
-        // toast({
-        //   title: "Error fetching dashboard data",
-        //   description: errorMessage,
-        //   variant: "destructive",
-        // })
+        toast("Error fetching dashboard data: " + errorMessage)
         console.error(err)
       } finally {
         setLoading(false)
@@ -106,7 +99,7 @@ const StudentDashboardPage = () => {
     }
 
     fetchDashboardData()
-  }, [router, toast])
+  }, [router])
 
   if (loading) {
     return (

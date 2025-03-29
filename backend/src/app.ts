@@ -1,12 +1,14 @@
 import cors from "cors"
-import jwt from "jsonwebtoken"
 import express, { NextFunction, Request, Response } from "express"
+import jwt from "jsonwebtoken"
 import connectDB from "./config/db"
 import adminRoutes from "./routes/adminRoutes"
+import attendaceRoutes from "./routes/attendanceRoutes"
 import authRoutes from "./routes/authRoutes"
-// import studentRoutes from "./routes/studentRoutes"
-// import teacherRoutes from "./routes/teacherRoutes"
-import User, { UserRole } from "./models/user"
+import courseRoutes from "./routes/courseRoutes"
+import studentRoutes from "./routes/studentRoutes"
+import teacherRoutes from "./routes/teacherRoutes"
+import userRoutes from "./routes/userroutes"
 
 const app = express()
 const PORT = process.env.PORT || 5000
@@ -18,8 +20,6 @@ app.use(
   })
 )
 app.use(express.json())
-
-connectDB()
 
 declare global {
   namespace Express {
@@ -43,23 +43,19 @@ export const authorizeRole = (
     if (!token) {
       return res.status(401).json({ message: "Unauthorized" })
     }
-
     try {
       const decoded = jwt.verify(
         token,
         process.env.JWT_SECRET || "your-secret-key"
       ) as JwtPayload
-
       req.user = decoded
-
       if (decoded.role !== requiredRole) {
         return res
           .status(403)
           .json({ message: "Forbidden: insufficient privileges" })
       }
-
       next()
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Token verification error:", error)
       return res.status(401).json({ message: "Invalid token" })
     }
@@ -67,9 +63,14 @@ export const authorizeRole = (
 }
 
 app.use("/api/auth/", authRoutes)
+app.use("/api", userRoutes)
 app.use("/api/admin/", adminRoutes)
-// app.use("/api/teacher/", teacherRoutes)
-// app.use("/api/student/", studentRoutes)
+app.use("/api/courses/", courseRoutes)
+app.use("/api/attendance/", attendaceRoutes)
+app.use("/api/teacher/", teacherRoutes)
+app.use("/api/student/", studentRoutes)
+
+connectDB()
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)

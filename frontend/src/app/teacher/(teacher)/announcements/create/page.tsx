@@ -53,7 +53,6 @@ const CreateAnnouncementPage = () => {
         )
         if (response.ok) {
           const data = await response.json()
-          // Ensure data is an array of departments
           setDepartments(data)
         } else {
           toast({
@@ -81,7 +80,7 @@ const CreateAnnouncementPage = () => {
     setError("")
     setSuccessMessage("")
     const collegeId = localStorage.getItem("collegeId")
-    const isAdmin = localStorage.getItem("adminId") // Check if admin
+    const isAdmin = localStorage.getItem("adminId")
 
     if (!collegeId) {
       toast({ title: "College ID not found.", variant: "destructive" })
@@ -102,7 +101,7 @@ const CreateAnnouncementPage = () => {
           collegeId,
           title,
           content,
-          departmentId: departmentId || null, // departmentId can be null for college-wide announcements
+          departmentId: departmentId || null,
         }),
       })
 
@@ -110,7 +109,7 @@ const CreateAnnouncementPage = () => {
 
       if (response.ok) {
         toast({ title: "Announcement created successfully!" })
-        router.push("/admin/announcements") // Or teacher announcements page
+        router.push("/admin/announcements")
       } else {
         toast({
           title: "Failed to create announcement.",

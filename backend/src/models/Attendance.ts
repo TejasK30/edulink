@@ -1,11 +1,11 @@
-import mongoose, { Schema, Document } from "mongoose"
+import { Schema, model, Document, Types } from "mongoose"
 
 export interface AttendanceDocument extends Document {
-  collegeId: mongoose.Types.ObjectId
-  departmentId: mongoose.Types.ObjectId
-  courseId: mongoose.Types.ObjectId
-  studentId: mongoose.Types.ObjectId
-  teacherId: mongoose.Types.ObjectId
+  collegeId: Types.ObjectId
+  departmentId: Types.ObjectId
+  courseId: Types.ObjectId
+  studentId: Types.ObjectId
+  teacherId: Types.ObjectId
   date: Date
   status: "present" | "absent"
   createdAt: Date
@@ -20,17 +20,13 @@ const AttendanceSchema: Schema = new Schema({
     required: true,
   },
   courseId: { type: Schema.Types.ObjectId, ref: "Course", required: true },
-  studentId: { type: Schema.Types.ObjectId, ref: "Student", required: true },
-  teacherId: { type: Schema.Types.ObjectId, ref: "Teacher", required: true },
+  studentId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+  teacherId: { type: Schema.Types.ObjectId, ref: "User", required: true },
   date: { type: Date, required: true },
   status: { type: String, enum: ["present", "absent"], required: true },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 })
 
-const Attendance = mongoose.model<AttendanceDocument>(
-  "Attendance",
-  AttendanceSchema
-)
-
+const Attendance = model<AttendanceDocument>("Attendance", AttendanceSchema)
 export default Attendance

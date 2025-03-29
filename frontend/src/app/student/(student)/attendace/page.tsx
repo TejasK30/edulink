@@ -22,7 +22,6 @@ interface AttendanceRecord {
 }
 
 const StudentAttendancePage = () => {
-  // Initialize as an array of AttendanceRecord
   const [attendanceRecords, setAttendanceRecords] = useState<
     AttendanceRecord[]
   >([])

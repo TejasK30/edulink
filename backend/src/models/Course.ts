@@ -1,16 +1,27 @@
-import mongoose, { Schema, Document } from "mongoose"
+import { Schema, model, Document, Types } from "mongoose"
+
+export interface Topic {
+  title: string
+  description: string
+}
 
 export interface ICourse extends Document {
-  collegeId: mongoose.Types.ObjectId
-  departmentId: mongoose.Types.ObjectId
+  collegeId: Types.ObjectId
+  departmentId: Types.ObjectId
+  semesterId: Types.ObjectId
+  teacherId: Types.ObjectId
   name: string
   code: string
   credits: number
   description?: string
-  enrolledStudents: mongoose.Types.ObjectId[]
-  semester?: string
-  teacherId?: mongoose.Types.ObjectId
+  topics: Topic[]
+  enrolledStudents: Types.ObjectId[]
 }
+
+const TopicSchema = new Schema<Topic>({
+  title: { type: String, required: true },
+  description: { type: String, required: true },
+})
 
 const CourseSchema: Schema = new Schema(
   {
@@ -26,16 +37,21 @@ const CourseSchema: Schema = new Schema(
       required: true,
       index: true,
     },
+    semesterId: {
+      type: Schema.Types.ObjectId,
+      ref: "Semester",
+      required: true,
+    },
+    teacherId: { type: Schema.Types.ObjectId, ref: "User" },
     name: { type: String, required: true },
     code: { type: String, required: true, unique: true },
     credits: { type: Number, required: true, default: 3 },
     description: { type: String },
+    topics: { type: [TopicSchema], default: [] },
     enrolledStudents: [{ type: Schema.Types.ObjectId, ref: "User" }],
-    prerequisites: [{ type: Schema.Types.ObjectId, ref: "Course" }],
     capacity: { type: Number },
-    semester: { type: String },
   },
   { timestamps: true }
 )
 
-export default mongoose.model<ICourse>("Course", CourseSchema)
+export default model<ICourse>("Course", CourseSchema)

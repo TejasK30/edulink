@@ -21,7 +21,6 @@ import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "sonner"
 
-// Zod validation schema
 const userFormSchema = z.object({
   userId: z.string().optional(),
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),

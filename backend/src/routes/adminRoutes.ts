@@ -3,13 +3,16 @@ import {
   adminDashboard,
   createAnnouncement,
   createJobPosting,
+  createSemester,
   createUser,
   deleteUser,
   getAdmins,
   getAllUsers,
+  getSemestersByCollege,
   getStudents,
   getTeachers,
   getUserById,
+  toggleSemesterStatus,
   updateUser,
 } from "../controllers/admincontroller"
 
@@ -26,5 +29,8 @@ router.delete("/users/:id", deleteUser)
 router.get("/dashboard-data", adminDashboard)
 router.post("/announcements/create", createAnnouncement)
 router.post("/jobs", createJobPosting)
+router.post("/semesters/:collegId", createSemester)
+router.patch("/semesters/:id", toggleSemesterStatus)
+router.get("/colleges/:collegeId/semesters", getSemestersByCollege)
 
 export default router

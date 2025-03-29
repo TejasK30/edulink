@@ -7,6 +7,7 @@ import jwt from "jsonwebtoken"
 import Department, { IDepartment } from "../models/Department"
 import mongoose from "mongoose"
 
+// Schemas for validation
 const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
@@ -37,6 +38,7 @@ const adminRegistrationSchema = z.object({
   collegeLocation: z.string().optional().nullable(),
   departments: z.array(z.string()).optional().nullable(),
 })
+
 export const registerUser = async (
   req: Request,
   res: Response
@@ -48,7 +50,9 @@ export const registerUser = async (
 
     const collegeExists = await College.findById(collegeId)
     if (!collegeExists) {
-      return res.status(400).json({ message: "Invalid college ID" })
+      return res
+        .status(400)
+        .json({ message: "Invalid college ID", success: false })
     }
 
     if (departmentId) {
@@ -57,15 +61,18 @@ export const registerUser = async (
         collegeId,
       })
       if (!departmentExists) {
-        return res
-          .status(400)
-          .json({ message: "Invalid department ID for the selected college" })
+        return res.status(400).json({
+          message: "Invalid department ID for the selected college",
+          success: false,
+        })
       }
     }
 
     const existingUser = await User.findOne({ email })
     if (existingUser) {
-      return res.status(409).json({ message: "Email already exists" })
+      return res
+        .status(409)
+        .json({ message: "Email already exists", success: false })
     }
 
     const hashedPassword = await bcrypt.hash(password, 10)
@@ -106,17 +113,22 @@ export const registerUser = async (
       })
     }
 
-    return res.status(201).json({ message: "Registration successful" })
+    return res
+      .status(201)
+      .json({ message: "Registration successful", success: true })
   } catch (error: any) {
     if (error instanceof z.ZodError) {
-      return res
-        .status(400)
-        .json({ message: "Invalid input data", errors: error.errors })
+      return res.status(400).json({
+        message: "Invalid input data",
+        errors: error.errors,
+        success: false,
+      })
     }
     console.error("Error registering user:", error)
-    res.status(500).json({ message: "Internal server error" })
+    res.status(500).json({ message: "Internal server error", success: false })
   }
 }
+
 const registerAdminWithCollege = async (
   req: Request,
   res: Response
@@ -140,11 +152,13 @@ const registerAdminWithCollege = async (
       if (!existingCollegeId) {
         return res
           .status(400)
-          .json({ message: "Existing college ID is required" })
+          .json({ message: "Existing college ID is required", success: false })
       }
       const existingCollege = await College.findById(existingCollegeId)
       if (!existingCollege) {
-        return res.status(404).json({ message: "Existing college not found" })
+        return res
+          .status(404)
+          .json({ message: "Existing college not found", success: false })
       }
       const existingAdmin = await User.findOne({
         email: adminEmail,
@@ -153,6 +167,7 @@ const registerAdminWithCollege = async (
       if (existingAdmin) {
         return res.status(409).json({
           message: "Admin with this email already exists in this college",
+          success: false,
         })
       }
       const newAdmin = new User({
@@ -166,18 +181,22 @@ const registerAdminWithCollege = async (
       await College.findByIdAndUpdate(existingCollegeId, {
         $push: { admins: savedAdmin._id },
       })
-      return res
-        .status(201)
-        .json({ message: "Admin added to existing college successfully" })
+      return res.status(201).json({
+        message: "Admin added to existing college successfully",
+        success: true,
+      })
     } else if (collegeOption === "new") {
       if (!collegeName) {
-        return res.status(400).json({ message: "College name is required" })
+        return res
+          .status(400)
+          .json({ message: "College name is required", success: false })
       }
       const existingCollegeWithName = await College.findOne({ collegeName })
       if (existingCollegeWithName) {
-        return res
-          .status(409)
-          .json({ message: "College with this name already exists" })
+        return res.status(409).json({
+          message: "College with this name already exists",
+          success: false,
+        })
       }
       const newCollege = new College({
         collegeName: collegeName,
@@ -188,7 +207,9 @@ const registerAdminWithCollege = async (
       const savedCollege = await newCollege.save()
       const existingAdmin = await User.findOne({ email: adminEmail })
       if (existingAdmin) {
-        return res.status(409).json({ message: "Admin email already exists" })
+        return res
+          .status(409)
+          .json({ message: "Admin email already exists", success: false })
       }
       const newAdmin = new User({
         name: adminName,
@@ -221,42 +242,54 @@ const registerAdminWithCollege = async (
           $push: { departments: { $each: departmentIds } },
         })
       }
-      return res
-        .status(201)
-        .json({ message: "Admin and College registration successful" })
+      return res.status(201).json({
+        message: "Admin and College registration successful",
+        success: true,
+      })
     } else {
       return res
         .status(400)
-        .json({ message: "Invalid college option selected" })
+        .json({ message: "Invalid college option selected", success: false })
     }
   } catch (error: any) {
     if (error instanceof z.ZodError) {
-      return res
-        .status(400)
-        .json({ message: "Invalid input data", errors: error.errors })
+      return res.status(400).json({
+        message: "Invalid input data",
+        errors: error.errors,
+        success: false,
+      })
     }
     console.error("Error registering admin:", error)
-    return res.status(500).json({ message: "Internal server error" })
+    return res
+      .status(500)
+      .json({ message: "Internal server error", success: false })
   }
 }
+
 const addCollege = async (req: Request, res: Response): Promise<any> => {
   try {
     const { name, location } = req.body
 
-    const existingCollege = await College.findOne({ name })
+    const existingCollege = await College.findOne({ collegeName: name })
     if (existingCollege) {
-      return res
-        .status(409)
-        .json({ message: "College with this name already exists" })
+      return res.status(409).json({
+        message: "College with this name already exists",
+        success: false,
+      })
     }
 
-    const newCollege = new College({ name, location })
+    const newCollege = new College({
+      collegeName: name,
+      collegeAddress: location,
+    })
     await newCollege.save()
 
-    res.status(201).json({ message: "College added successfully" })
+    res
+      .status(201)
+      .json({ message: "College added successfully", success: true })
   } catch (error: any) {
     console.error("Error adding college:", error)
-    res.status(500).json({ message: "Internal server error" })
+    res.status(500).json({ message: "Internal server error", success: false })
   }
 }
 
@@ -268,15 +301,20 @@ const loginUser = async (req: Request, res: Response): Promise<any> => {
     const user = await User.findOne({ email })
       .select("+password")
       .populate<{ college: ICollege }>("college")
+      .populate<{ department: IDepartment }>("department")
 
     if (!user) {
-      return res.status(401).json({ message: "Invalid credentials" })
+      return res
+        .status(401)
+        .json({ message: "Invalid credentials", success: false })
     }
 
     const isPasswordMatch = await bcrypt.compare(password, user.password)
 
     if (!isPasswordMatch) {
-      return res.status(401).json({ message: "Invalid credentials" })
+      return res
+        .status(401)
+        .json({ message: "Invalid credentials", success: false })
     }
 
     const token = jwt.sign(
@@ -292,54 +330,45 @@ const loginUser = async (req: Request, res: Response): Promise<any> => {
       maxAge: 24 * 60 * 60 * 1000,
     })
 
-    let userData: any
-
-    if (user.role === UserRole.STUDENT) {
-      userData = {
-        userid: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        collegname: user.college?.collegeName,
-        collegeid: user.college?._id,
-      }
-    } else if (user.role === UserRole.ADMIN || user.role === UserRole.TEACHER) {
-      userData = {
-        userid: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        collegeid: user.college?._id,
-        collegname: user.college?.collegeName,
-        departments: user.college?.departments,
-        admins: user.college?.admins,
-        teachers: user.college?.teachers,
-        students: user.college?.students,
-      }
+    const userData = {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      collegeid: user.college?._id,
+      collegname: user.college?.collegeName,
+      department: user.department?._id,
     }
 
     return res.status(200).json({
       message: "Login successful",
       user: userData,
+      success: true,
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof z.ZodError) {
-      return res
-        .status(400)
-        .json({ message: "Invalid input data", errors: error.errors })
+      return res.status(400).json({
+        message: "Invalid input data",
+        errors: error.errors,
+        success: false,
+      })
     }
     console.error("Login error:", error)
-    res.status(500).json({ message: "Internal server error" })
+    return res
+      .status(500)
+      .json({ message: "Internal server error", success: false })
   }
 }
 
 const getColleges = async (req: Request, res: Response): Promise<any> => {
   try {
     const colleges = await College.find().select("_id collegeName")
-    res.status(200).json(colleges)
+    res.status(200).json({ data: colleges, success: true })
   } catch (error) {
     console.error("Error fetching colleges:", error)
-    res.status(500).json({ message: "Failed to fetch colleges" })
+    res
+      .status(500)
+      .json({ message: "Failed to fetch colleges", success: false })
   }
 }
 
@@ -349,7 +378,7 @@ const logoutUser = (req: Request, res: Response): void => {
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
   })
-  res.status(200).json({ message: "Logged out successfully" })
+  res.status(200).json({ message: "Logged out successfully", success: true })
 }
 
 export const getDepartmentsByCollege = async (
@@ -361,10 +390,12 @@ export const getDepartmentsByCollege = async (
     const departments = await Department.find({
       collegeId: new mongoose.Types.ObjectId(collegeId),
     })
-    return res.status(200).json(departments)
+    return res.status(200).json({ data: departments, success: true })
   } catch (error: any) {
     console.error("Error fetching departments by college:", error)
-    return res.status(500).json({ message: "Internal server error" })
+    return res
+      .status(500)
+      .json({ message: "Internal server error", success: false })
   }
 }
 

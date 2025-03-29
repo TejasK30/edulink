@@ -109,7 +109,6 @@ export default function AdminSidebar({
             email: data.user.email,
             avatar: "/avatars/admin.jpg",
           },
-          // Use the passed departments if provided; otherwise, fall back to defaults.
           departments: departments.length ? departments : defaultDepartments,
         })
       } catch (err: unknown) {

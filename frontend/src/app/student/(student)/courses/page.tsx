@@ -21,7 +21,6 @@ interface Course {
 }
 
 const StudentCoursesPage = () => {
-  // Define courses as an array of Course
   const [courses, setCourses] = useState<Course[]>([])
   const [selectedCourse, setSelectedCourse] = useState<string | undefined>()
   const [error, setError] = useState<string | null>(null)
@@ -36,13 +35,11 @@ const StudentCoursesPage = () => {
         return
       }
       try {
-        // Adjust the endpoint as needed
         const response = await fetch(
           `http://localhost:5000/api/student/courses`
         )
         if (response.ok) {
           const data = await response.json()
-          // Assuming data is an array of courses
           setCourses(data)
         } else {
           const errorData = await response.json()
@@ -72,11 +69,8 @@ const StudentCoursesPage = () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            // Include any necessary authentication headers
           },
-          body: JSON.stringify({
-            // You might need to send additional data (e.g., semester ID)
-          }),
+          body: JSON.stringify({}),
         }
       )
 
@@ -85,7 +79,6 @@ const StudentCoursesPage = () => {
         setSuccessMessage(
           data.message || "Successfully enrolled in the course."
         )
-        // Optionally, refresh or update the course list here.
       } else {
         const errorData = await response.json()
         setError(errorData.message || "Failed to enroll in the course.")

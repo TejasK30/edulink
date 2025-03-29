@@ -12,6 +12,7 @@ export type User =
       role: "student"
       collegname: string
       collegeid: string
+      department?: string
     }
   | {
       _id: string

@@ -57,11 +57,13 @@ interface UserListPageProps {
 }
 
 const addUserFormSchema = z.object({
+  _id: z.string().optional(),
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
   email: z.string().email({ message: "Please enter a valid email address" }),
   password: z
     .string()
-    .min(6, { message: "Password must be at least 6 characters" }),
+    .min(6, { message: "Password must be at least 6 characters" })
+    .optional(),
   department: z.string().optional(),
 })
 
@@ -73,15 +75,18 @@ const UserListPage: React.FC<UserListPageProps> = ({ role, users }) => {
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<(User & {}) | null>(null)
   const [addDialogOpen, setAddDialogOpen] = useState(false)
-  const { currentUser } = useAppStore()
+  const { currentUser, fetchStudents, fetchTeachers, fetchAdmins } =
+    useAppStore()
   const [departments, setDepartments] = useState<
     { _id: string; name: string }[]
   >([])
   const [isAddingUser, setIsAddingUser] = useState(false)
+  const [isEditingUser, setIsEditingUser] = useState(false)
 
   const form = useForm<AddUserFormValues>({
     resolver: zodResolver(addUserFormSchema),
     defaultValues: {
+      _id: "",
       name: "",
       email: "",
       password: "",
@@ -104,11 +109,19 @@ const UserListPage: React.FC<UserListPageProps> = ({ role, users }) => {
   const handleEditOpen = (user: User & {}) => {
     setSelectedUser(user)
     setEditDialogOpen(true)
+    form.reset({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      password: "",
+      department: (user as any).department || "",
+    })
   }
 
   const handleAddOpen = () => {
     setAddDialogOpen(true)
     form.reset({
+      _id: "",
       name: "",
       email: "",
       password: "",
@@ -118,6 +131,10 @@ const UserListPage: React.FC<UserListPageProps> = ({ role, users }) => {
 
   const handleAddClose = () => {
     setAddDialogOpen(false)
+  }
+
+  const handleEditClose = () => {
+    setEditDialogOpen(false)
   }
 
   async function handleAddUser(values: AddUserFormValues) {
@@ -139,6 +156,13 @@ const UserListPage: React.FC<UserListPageProps> = ({ role, users }) => {
       if (response.status === 201) {
         toast(`${role} created successfully!`)
         handleAddClose()
+        if (role === "student") {
+          await fetchStudents(currentUser?.collegeid || "")
+        } else if (role === "teacher") {
+          await fetchTeachers(currentUser?.collegeid || "")
+        } else if (role === "admin") {
+          await fetchAdmins(currentUser?.collegeid || "")
+        }
       } else {
         toast(`Failed to create ${role}.`)
       }
@@ -150,50 +174,128 @@ const UserListPage: React.FC<UserListPageProps> = ({ role, users }) => {
     }
   }
 
+  async function handleEditUser(values: AddUserFormValues) {
+    setIsEditingUser(true)
+    try {
+      const { _id, ...updatedData } = values
+      const payload: any = { ...updatedData }
+      if (!payload.password) {
+        delete payload.password
+      }
+      const response = await api.put(`/admin/users/${_id}`, payload)
+      if (response.status === 200) {
+        toast(`${role} updated successfully!`)
+        handleEditClose()
+        if (role === "student") {
+          await fetchStudents(currentUser?.collegeid || "")
+        } else if (role === "teacher") {
+          await fetchTeachers(currentUser?.collegeid || "")
+        } else if (role === "admin") {
+          await fetchAdmins(currentUser?.collegeid || "")
+        }
+      } else {
+        toast(`Failed to update ${role}.`)
+      }
+    } catch (error: any) {
+      toast(`Error updating ${role}. \ndescription: ${error.message}`)
+      console.error(error)
+    } finally {
+      setIsEditingUser(false)
+    }
+  }
+
   const renderUserDialogContent = (isEditable: boolean) => {
     return (
       <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row items-center space-x-0 sm:space-x-4 space-y-2 sm:space-y-0">
-          <div className="w-full">
-            <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2">
-              <Label
-                htmlFor={`${isEditable ? "edit" : "view"}-name`}
-                className="text-left sm:text-right"
-              >
-                Name
-              </Label>
-              <Input
-                id={`${isEditable ? "edit" : "view"}-name`}
-                value={selectedUser?.name || ""}
-                disabled={!isEditable}
-                className={`w-full col-span-3 ${!isEditable ? "bg-muted" : ""}`}
-              />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 mt-2">
-              <Label
-                htmlFor={`${isEditable ? "edit" : "view"}-email`}
-                className="text-left sm:text-right"
-              >
-                Email
-              </Label>
-              <Input
-                id={`${isEditable ? "edit" : "view"}-email`}
-                value={selectedUser?.email || ""}
-                disabled={!isEditable}
-                className={`w-full col-span-3 ${!isEditable ? "bg-muted" : ""}`}
-              />
-            </div>
-          </div>
-        </div>
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Full Name</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="Enter full name"
+                  disabled={!isEditable}
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="Enter email"
+                  disabled={!isEditable}
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        {isEditable && (
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Password</FormLabel>
+                <FormControl>
+                  <Input
+                    type="password"
+                    placeholder="Leave blank to keep current password"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+        {(role === "teacher" || role === "student") && (
+          <FormField
+            control={form.control}
+            name="department"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Department</FormLabel>
+                <FormControl>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    disabled={!isEditable}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select department" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {departments.map((dept) => (
+                        <SelectItem key={dept._id} value={dept._id}>
+                          {dept.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
         <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2">
-          <Label
-            htmlFor={`${isEditable ? "edit" : "view"}-id`}
-            className="text-left sm:text-right"
-          >
+          <Label htmlFor="user-id" className="text-left sm:text-right">
             ID
           </Label>
           <Input
-            id={`${isEditable ? "edit" : "view"}-id`}
+            id="user-id"
             value={selectedUser?._id || ""}
             disabled
             className="w-full col-span-3 bg-muted"
@@ -362,17 +464,26 @@ const UserListPage: React.FC<UserListPageProps> = ({ role, users }) => {
               Modify the details of the selected user
             </DialogDescription>
           </DialogHeader>
-          {renderUserDialogContent(true)}
-          <DialogFooter className="flex justify-end space-x-2">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => setEditDialogOpen(false)}
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(handleEditUser)}
+              className="space-y-4"
             >
-              Cancel
-            </Button>
-            <Button type="submit">Save Changes</Button>
-          </DialogFooter>
+              {renderUserDialogContent(true)}
+              <DialogFooter className="flex justify-end space-x-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={handleEditClose}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isEditingUser}>
+                  {isEditingUser ? `Updating ${role}...` : `Save Changes`}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
       <Dialog open={addDialogOpen} onOpenChange={handleAddClose}>
@@ -449,12 +560,9 @@ const UserListPage: React.FC<UserListPageProps> = ({ role, users }) => {
                             <SelectValue placeholder="Select department" />
                           </SelectTrigger>
                           <SelectContent>
-                            {departments.map((department) => (
-                              <SelectItem
-                                key={department._id}
-                                value={department._id}
-                              >
-                                {department.name}
+                            {departments.map((dept) => (
+                              <SelectItem key={dept._id} value={dept._id}>
+                                {dept.name}
                               </SelectItem>
                             ))}
                           </SelectContent>

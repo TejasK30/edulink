@@ -1,143 +1,147 @@
 "use client"
-import { useEffect, useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+
 import { Button } from "@/components/ui/button"
-import {
-  Table,
-  TableHeader,
-  TableRow,
-  TableHead,
-  TableBody,
-  TableCell,
-} from "@/components/ui/table"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import api from "@/lib/api"
+import { useAppStore } from "@/lib/store"
+import { cn } from "@/lib/utils"
+import { format, isPast } from "date-fns"
+import { ArrowLeft, Eye, PlusCircle } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
 
 interface Assignment {
   _id: string
   title: string
+  name: string
   dueDate: string
-  totalMarks?: number
-  submissionType: "online" | "offline"
+  createdAt: string
+  updatedAt: string
+  questions: string[]
 }
 
-const TeacherAssignmentsPage = () => {
+const AssignmentListPage = () => {
+  const router = useRouter()
+  const { currentUser } = useAppStore()
   const [assignments, setAssignments] = useState<Assignment[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
-  const searchParams = useSearchParams()
-
-  const courseId = searchParams.get("courseId")
 
   useEffect(() => {
-    if (!courseId) return
-
     const fetchAssignments = async () => {
+      if (!currentUser?._id) {
+        return
+      }
       setLoading(true)
       setError(null)
-      const teacherId = "afksd"
-      // const teacherId = localStorage.getItem("teacherId")
-      // if (!teacherId) {
-      //   router.push("/teacher/login")
-      //   return
-      // }
       try {
-        const response = await fetch(
-          `http://localhost:5000/api/teacher/courses/${courseId}/assignments`,
-          {
-            headers: {
-              "x-teacher-id": teacherId,
-            },
-          }
+        const response = await api.get(
+          `/teacher/assignments/teacher/${currentUser._id}`
         )
-        if (response.ok) {
-          const data = await response.json()
-          setAssignments(data)
+        if (response.status === 200) {
+          setAssignments(response.data)
         } else {
-          const errorData = await response.json()
-          setError(errorData.message || "Failed to fetch assignments.")
+          setError("Failed to fetch assignments")
         }
-      } catch (err: any) {
-        setError("Error fetching assignments.")
-        console.error(err)
+      } catch (error: any) {
+        setError(error.message || "An unexpected error occurred")
       } finally {
         setLoading(false)
       }
     }
 
     fetchAssignments()
-  }, [router, courseId])
+  }, [currentUser?._id])
 
-  if (loading)
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        Loading assignments...
-      </div>
-    )
-  if (error)
-    return (
-      <div className="min-h-screen flex items-center justify-center text-red-500">
-        {error}
-      </div>
-    )
+  const getAssignmentStatus = (dueDate: string): "Upcoming" | "Overdue" => {
+    const dueDateObj = new Date(dueDate)
+    return isPast(dueDateObj) ? "Overdue" : "Upcoming"
+  }
+
+  const handleViewAssignment = (assignmentId: string) => {
+    router.push(`/teacher/assignments/${assignmentId}`)
+  }
 
   return (
-    <div className="container mx-auto py-10 px-4">
-      <h1 className="text-3xl font-bold text-center mb-8">
-        Assignments for Course: {courseId}
-      </h1>
-      <div className="flex justify-between items-center mb-4">
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="flex items-center justify-between mb-6">
         <Button
-          onClick={() =>
-            router.push(`/teacher/assignments/create?courseId=${courseId}`)
-          }
+          variant="ghost"
+          size="sm"
+          onClick={() => router.back()}
+          className="mr-2"
         >
-          Create New Assignment
+          <ArrowLeft className="h-4 w-4 mr-1" />
+          Back
+        </Button>
+        <Button
+          onClick={() => router.push("/assignments/create")}
+          className="space-x-2"
+        >
+          <PlusCircle className="h-4 w-4" />
+          <span>Create Assignment</span>
         </Button>
       </div>
-      <div className="overflow-x-auto">
-        <Table className="min-w-full">
-          <TableHeader>
-            <TableRow>
-              <TableHead>Title</TableHead>
-              <TableHead>Due Date</TableHead>
-              <TableHead>Total Marks</TableHead>
-              <TableHead>Submission Type</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {assignments.map((assignment: Assignment) => (
-              <TableRow key={assignment._id}>
-                <TableCell>{assignment.title}</TableCell>
-                <TableCell>
-                  {new Date(assignment.dueDate).toLocaleDateString()}
-                </TableCell>
-                <TableCell>{assignment.totalMarks ?? "N/A"}</TableCell>
-                <TableCell>{assignment.submissionType}</TableCell>
-                <TableCell className="space-x-2">
+
+      <div>
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-4">
+          Assignments
+        </h1>
+        <p className="text-muted-foreground text-sm md:text-base mt-1 mb-6">
+          Manage and view all your created assignments here.
+        </p>
+
+        {loading && <p>Loading assignments...</p>}
+        {error && <p className="text-red-500">{error}</p>}
+
+        {!loading && !error && assignments.length === 0 && (
+          <p>No assignments created yet.</p>
+        )}
+
+        {!loading && !error && assignments.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {assignments.map((assignment) => (
+              <Card key={assignment._id}>
+                <CardHeader>
+                  <CardTitle>{assignment.title}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    {assignment.name}
+                  </p>
+                  <p className="text-sm">
+                    Due Date:{" "}
+                    {format(new Date(assignment.dueDate), "PPP HH:mm")}
+                  </p>
+                  <p className="text-sm font-semibold">
+                    Status:{" "}
+                    <span
+                      className={cn({
+                        "text-green-500":
+                          getAssignmentStatus(assignment.dueDate) ===
+                          "Upcoming",
+                        "text-red-500":
+                          getAssignmentStatus(assignment.dueDate) === "Overdue",
+                      })}
+                    >
+                      {getAssignmentStatus(assignment.dueDate)}
+                    </span>
+                  </p>
                   <Button
                     size="sm"
-                    onClick={() =>
-                      router.push(`/teacher/assignments/edit/${assignment._id}`)
-                    }
+                    onClick={() => handleViewAssignment(assignment._id)}
                   >
-                    Edit
+                    <Eye className="h-4 w-4 mr-2" />
+                    View
                   </Button>
-                  <Button size="sm">View Submissions</Button>
-                  <Button size="sm" variant="destructive">
-                    Delete
-                  </Button>
-                </TableCell>
-              </TableRow>
+                </CardContent>
+              </Card>
             ))}
-          </TableBody>
-        </Table>
-      </div>
-      <div className="mt-4">
-        <Button onClick={() => router.back()}>Back to Dashboard</Button>
+          </div>
+        )}
       </div>
     </div>
   )
 }
 
-export default TeacherAssignmentsPage
+export default AssignmentListPage

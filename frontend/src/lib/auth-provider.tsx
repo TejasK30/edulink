@@ -3,27 +3,48 @@
 import api from "@/lib/api"
 import { AxiosError } from "axios"
 import { useRouter } from "next/navigation"
-import type React from "react"
-import { createContext, useContext, useState } from "react"
+import React, { createContext, useContext, useState } from "react"
 import { toast } from "sonner"
 import { useAppStore } from "./store"
 
-type UserRoleType = "admin" | "teacher" | "student"
+export type UserRoleType = "admin" | "teacher" | "student"
 
-type User = {
-  id: string
-  name: string
-  email: string
-  role: UserRoleType
-  collegeId?: string
-}
+export type User =
+  | {
+      _id: string
+      name: string
+      email: string
+      role: "student"
+      collegname: string
+      collegeid: string
+      department?: string
+    }
+  | {
+      _id: string
+      name: string
+      email: string
+      role: "teacher" | "admin"
+      collegeid: string
+      collegname: string
+      departments: string[]
+      admins: string[]
+      teachers: string[]
+      students: string[]
+    }
+  | null
 
 type AuthContextType = {
-  currentUser: User | null
+  currentUser: User
   isLoading: boolean
-  login: (email: string, password: string, remember?: boolean) => Promise<void>
+  login: (
+    email: string,
+    password: string,
+    remember?: boolean
+  ) => Promise<{ success: boolean; message?: string } | void>
   register: (data: RegisterData) => Promise<void>
-  registerAdminWithCollege: (data: AdminRegisterData) => Promise<void>
+  registerAdminWithCollege: (
+    data: AdminRegisterData
+  ) => Promise<{ success: boolean; message?: string } | void>
   logout: () => void
 }
 
@@ -54,6 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter()
 
   const redirectBasedOnRole = (user: User) => {
+    if (!user) return
     switch (user.role) {
       case "admin":
         router.push("/admin/dashboard")
@@ -67,26 +89,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string, remember?: boolean) => {
     setIsLoading(true)
     try {
-      const response = await api.post<{ user: User }>("/auth/login", {
+      const response = await api.post<{ user: any }>("/auth/login", {
         email,
         password,
       })
+      const backendUser = response.data.user
 
-      setUser(response.data.user)
+      let mappedUser: User
+      if (backendUser.role === "student") {
+        mappedUser = {
+          _id: backendUser._id,
+          name: backendUser.name,
+          email: backendUser.email,
+          role: "student",
+          collegeid: backendUser.collegeId,
+          collegname: backendUser.collegeName || "",
+          department: backendUser.department,
+        }
+      } else {
+        mappedUser = {
+          _id: backendUser._id,
+          name: backendUser.name,
+          email: backendUser.email,
+          role: backendUser.role,
+          collegeid: backendUser.collegeId,
+          collegname: backendUser.collegeName || "",
+          departments: backendUser.departments || [],
+          admins: backendUser.admins || [],
+          teachers: backendUser.teachers || [],
+          students: backendUser.students || [],
+        }
+      }
 
-      redirectBasedOnRole(response.data.user)
-      toast(`Login successful \nWelcome back, ${response.data.user.name}!`)
+      setUser(mappedUser)
+      toast(`Login successful \nWelcome back, ${mappedUser.name}!`)
+      redirectBasedOnRole(mappedUser)
+      return { success: true }
     } catch (error) {
       const errorMessage =
         error instanceof AxiosError
           ? error.response?.data?.message || "Login failed"
           : "An unexpected error occurred"
-
       console.error("Login error:", errorMessage)
       toast("Login failed")
+      return { success: false, message: errorMessage }
     } finally {
       setIsLoading(false)
     }
@@ -96,7 +145,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true)
     try {
       await api.post("/auth/register", data)
-
       toast("Registration successful \nYour account has been created")
       router.push("/login")
     } catch (error) {
@@ -104,7 +152,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         error instanceof AxiosError
           ? error.response?.data?.message || "Registration failed"
           : "An unexpected error occurred"
-
       console.error("Registration error:", errorMessage)
       toast("Registration failed")
     } finally {
@@ -136,20 +183,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         payload.collegeLocation = data.collegeLocation
       }
 
-      await api.post("/auth/register/admin", payload)
+      const response = await api.post("/auth/register/admin", payload)
+      if (response.data && response.data.success === false) {
+        toast(response.data.message || "Registration failed")
+        return { success: false, message: response.data.message }
+      }
 
       toast(
         "Registration successful \nAdmin and College registration successful"
       )
       router.push("/admin/dashboard")
+      return { success: true }
     } catch (error) {
       const errorMessage =
         error instanceof AxiosError
           ? error.response?.data?.message || "Admin registration failed"
           : "An unexpected error occurred"
-
       console.error("Admin registration error:", errorMessage)
       toast("Registration failed")
+      return { success: false, message: errorMessage }
     } finally {
       setIsLoading(false)
     }
@@ -157,7 +209,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     await api.post("/auth/logout")
-
     setUser(null)
     router.push("/login")
     toast("Logged out")
@@ -166,7 +217,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return (
     <AuthContext.Provider
       value={{
-        currentUser,
+        currentUser: currentUser,
         isLoading,
         login,
         register,

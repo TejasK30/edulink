@@ -1,4 +1,3 @@
-// User model
 import mongoose, { Schema, Document } from "mongoose"
 
 export enum UserRole {
@@ -14,6 +13,7 @@ export interface UserModel extends Document {
   role: UserRole
   college: mongoose.Types.ObjectId
   department?: mongoose.Types.ObjectId
+  enrolledCourses?: mongoose.Types.ObjectId[]
   createdAt?: Date
   updatedAt?: Date
 }
@@ -36,6 +36,7 @@ const UserSchema: Schema = new Schema(
     },
     college: { type: Schema.Types.ObjectId, ref: "College", required: true },
     department: { type: Schema.Types.ObjectId, ref: "Department" },
+    enrolledCourses: [{ type: Schema.Types.ObjectId, ref: "Course" }],
   },
   { timestamps: true }
 )

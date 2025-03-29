@@ -134,7 +134,6 @@ export function AdminRegistrationForm({ onBack }: AdminRegistrationFormProps) {
       router.push("/admin/dashboard")
     } catch (error) {
       console.error(error)
-      // Optionally display an error message to the user using toast
     } finally {
       setIsLoading(false)
     }
@@ -143,7 +142,6 @@ export function AdminRegistrationForm({ onBack }: AdminRegistrationFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        {/* Admin Name, Email, Password fields remain the same */}
         <FormField
           control={form.control}
           name="adminName"

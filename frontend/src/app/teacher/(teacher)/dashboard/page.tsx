@@ -23,7 +23,6 @@ interface Announcement {
 }
 
 const TeacherDashboardPage = () => {
-  // Initialize states as arrays
   const [coursesTeaching, setCoursesTeaching] = useState<Course[]>([])
   const [upcomingAssignmentsToGrade, setUpcomingAssignmentsToGrade] = useState<
     Assignment[]

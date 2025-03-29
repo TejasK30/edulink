@@ -18,7 +18,7 @@ const CreateJobPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    const collegeId = localStorage.getItem("collegeId") // Assuming collegeId is stored
+    const collegeId = localStorage.getItem("collegeId")
 
     if (!collegeId) {
       toast({ title: "College ID not found.", variant: "destructive" })
@@ -50,7 +50,6 @@ const CreateJobPage = () => {
 
       if (response.ok) {
         toast({ title: "Job posted successfully!" })
-        // Redirect based on role
         router.push(
           localStorage.getItem("adminId") ? "/admin/jobs" : "/teacher/jobs"
         )
