@@ -208,8 +208,11 @@ export const getEnrolledCourses = async (
         .json({ message: "Student ID is required", success: false })
     }
 
-    const courses = await Course.find({ enrolledStudents: studentId }).lean()
-    return res.status(200).json({ courses: courses, success: true })
+    const courses = await Course.find({ enrolledStudents: studentId })
+      .select("_id name code")
+      .lean()
+
+    return res.status(200).json({ courses, success: true })
   } catch (error: any) {
     console.error("Error fetching enrolled courses:", error)
     return res.status(500).json({
