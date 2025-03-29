@@ -310,7 +310,6 @@ const loginUser = async (req: Request, res: Response): Promise<any> => {
     }
 
     const isPasswordMatch = await bcrypt.compare(password, user.password)
-
     if (!isPasswordMatch) {
       return res
         .status(401)
@@ -318,7 +317,12 @@ const loginUser = async (req: Request, res: Response): Promise<any> => {
     }
 
     const token = jwt.sign(
-      { id: user._id, role: user.role, collegeId: user.college?._id },
+      {
+        id: user._id,
+        role: user.role,
+        collegeId: user.college?._id,
+        departmentId: user.department?._id,
+      },
       process.env.JWT_SECRET || "your-secret-key",
       { expiresIn: "1d" }
     )
@@ -330,14 +334,15 @@ const loginUser = async (req: Request, res: Response): Promise<any> => {
       maxAge: 24 * 60 * 60 * 1000,
     })
 
+    // Standardize user data for all roles
     const userData = {
       _id: user._id,
       name: user.name,
       email: user.email,
       role: user.role,
-      collegeid: user.college?._id,
-      collegname: user.college?.collegeName,
-      department: user.department?._id,
+      collegeid: user.college?._id || "",
+      collegname: user.college?.collegeName || "",
+      departmentid: user.department?._id || "",
     }
 
     return res.status(200).json({

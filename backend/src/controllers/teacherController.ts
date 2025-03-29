@@ -1,6 +1,9 @@
 import { Request, Response } from "express"
 import Assignment from "../models/Assignment"
-import { Types } from "mongoose"
+import mongoose, { Types } from "mongoose"
+import Course from "../models/Course"
+import User, { UserRole } from "../models/user"
+import Department from "../models/Department"
 
 export const createAssignment = async (
   req: Request,
@@ -117,5 +120,97 @@ export const getAssignmentById = async (
       message: "Failed to fetch assignment details",
       error: error.message,
     })
+  }
+}
+
+export const getDepartmentCourses = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { departmentId } = req.params
+
+    if (!mongoose.Types.ObjectId.isValid(departmentId)) {
+      return res.status(400).json({ message: "Invalid department ID" })
+    }
+
+    const courses = await Course.find({
+      departmentId: departmentId,
+    })
+
+    return res.status(200).json(courses)
+  } catch (error: any) {
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message })
+  }
+}
+export const assignCourseToTeacher = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { teacherId } = req.params
+    const { courseId } = req.body
+
+    if (!mongoose.Types.ObjectId.isValid(courseId)) {
+      return res.status(400).json({ message: "Invalid course ID" })
+    }
+
+    const teacher = await User.findById(teacherId)
+    if (!teacher) {
+      return res.status(404).json({ message: "Teacher not found" })
+    }
+
+    if (teacher.role !== UserRole.TEACHER) {
+      return res.status(403).json({ message: "User is not a teacher" })
+    }
+
+    const updatedCourse = await Course.findByIdAndUpdate(
+      courseId,
+      { teacherId: teacherId },
+      { new: true }
+    )
+
+    if (!updatedCourse) {
+      return res.status(404).json({ message: "Course not found" })
+    }
+
+    await Department.findByIdAndUpdate(updatedCourse.departmentId, {
+      $addToSet: { teachers: teacherId },
+    })
+
+    res.status(200).json({
+      message: "Course assigned successfully",
+      course: updatedCourse,
+    })
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error })
+  }
+}
+
+export const getTeacherDepartments = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { teacherId } = req.params
+
+    const teacher = await User.findById(teacherId)
+    if (!teacher) {
+      return res.status(404).json({ message: "Teacher not found" })
+    }
+
+    if (teacher.role !== UserRole.TEACHER) {
+      return res.status(403).json({ message: "User is not a teacher" })
+    }
+
+    const departments = await Department.find({
+      collegeId: teacher.college,
+    })
+
+    res.status(200).json(departments)
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error })
   }
 }

@@ -9,6 +9,7 @@ import courseRoutes from "./routes/courseRoutes"
 import studentRoutes from "./routes/studentRoutes"
 import teacherRoutes from "./routes/teacherRoutes"
 import userRoutes from "./routes/userroutes"
+import announceMentRoutes from "./routes/announcementRoutes"
 
 const app = express()
 const PORT = process.env.PORT || 5000
@@ -69,6 +70,7 @@ app.use("/api/courses/", courseRoutes)
 app.use("/api/attendance/", attendaceRoutes)
 app.use("/api/teacher/", teacherRoutes)
 app.use("/api/student/", studentRoutes)
+app.use("/api/announcements", announceMentRoutes)
 
 connectDB()
 

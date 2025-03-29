@@ -41,3 +41,51 @@ export type CourseFormData = {
   description?: string
   topics?: { title: string; description: string }[]
 }
+export interface Department {
+  _id: string
+  name: string
+  collegeId: string
+}
+
+export interface Course {
+  _id: string
+  name: string
+  code: string
+  credits: number
+  description?: string
+  teacherId?: string
+  departmentId: string
+  collegeId: string
+  semesterId: string
+}
+
+export interface Announcement {
+  _id: string
+  title: string
+  content: string
+  authorId: {
+    _id: string
+    name: string
+  }
+  authorRole: "admin" | "teacher"
+  createdAt: string
+  collegeId: {
+    _id: string
+    name: string
+  }
+  departmentId?: {
+    _id: string
+    name: string
+  }
+}
+
+export interface PaginatedResponse<T> {
+  success: boolean
+  data: T[]
+  pagination: {
+    total: number
+    page: number
+    limit: number
+    pages: number
+  }
+}

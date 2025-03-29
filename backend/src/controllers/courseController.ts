@@ -3,6 +3,7 @@ import Course, { ICourse } from "../models/Course"
 import Semester, { ISemester } from "../models/Semester"
 import User from "../models/user"
 import { Types } from "mongoose"
+import Department from "../models/Department"
 
 const handleError = (res: Response, error: any): Response => {
   console.error(error)
@@ -126,6 +127,11 @@ export const createCourse = async (
     }
 
     const course = await Course.create(newCourse)
+
+    await Department.findByIdAndUpdate(departmentId, {
+      $push: { subjects: course._id },
+    })
+
     return res.status(201).json(course)
   } catch (error: any) {
     return res

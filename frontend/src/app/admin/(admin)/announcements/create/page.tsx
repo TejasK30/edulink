@@ -1,174 +1,167 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import api from "@/lib/api"
+import { useAppStore } from "@/lib/store"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
+import { useForm } from "react-hook-form"
 import { toast } from "sonner"
+import { z as zod } from "zod"
 
-interface Department {
-  _id: string
-  name: string
-}
+const formSchema = zod.object({
+  title: zod
+    .string()
+    .min(5, { message: "Title must be at least 5 characters long" })
+    .max(100, { message: "Title must not exceed 100 characters" }),
+  content: zod
+    .string()
+    .min(10, { message: "Content must be at least 10 characters long" })
+    .max(5000, { message: "Content must not exceed 5000 characters" }),
+})
 
-const CreateAnnouncementPage = () => {
-  const [title, setTitle] = useState("")
-  const [content, setContent] = useState("")
-  const [departmentId, setDepartmentId] = useState("")
-  const [departments, setDepartments] = useState<Department[]>([])
-  const [error, setError] = useState("")
-  const [successMessage, setSuccessMessage] = useState("")
+export default function CreateAnnouncementForm() {
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
+  const { currentUser } = useAppStore()
 
   useEffect(() => {
-    const fetchDepartments = async () => {
-      const adminId = localStorage.getItem("adminId")
-      if (!adminId) {
-        router.push("/admin/login")
-        return
-      }
-      const collegeId = localStorage.getItem("collegeId")
-      if (!collegeId) {
-        toast("College ID not found.")
-        return
-      }
-      try {
-        const response = await fetch(
-          `http://localhost:5000/api/admin/departments`,
-          {
-            headers: {
-              "x-admin-id": adminId,
-            },
-          }
-        )
-        if (response.ok) {
-          const data = await response.json()
-          setDepartments(data)
-        } else {
-          toast("Failed to fetch departments.")
-        }
-      } catch (err: unknown) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Unknown error"
-        toast("Error fetching departments. " + errorMessage)
-        console.error(err)
-      }
-    }
+    setIsLoading(false)
+  }, [])
 
-    fetchDepartments()
-  }, [router])
+  const form = useForm<zod.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: { title: "", content: "" },
+  })
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
-    setSuccessMessage("")
-    const collegeId = localStorage.getItem("collegeId")
-    const isAdmin = localStorage.getItem("adminId")
-
-    if (!collegeId) {
-      toast("College ID not found.")
-      return
-    }
-
+  async function onSubmit(values: zod.infer<typeof formSchema>) {
+    setIsSubmitting(true)
     try {
-      const response = await fetch("http://localhost:5000/api/announcements", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(isAdmin && { "x-admin-id": isAdmin }),
-          ...(!isAdmin && {
-            "x-teacher-id": localStorage.getItem("teacherId") || "",
-          }),
-        },
-        body: JSON.stringify({
-          collegeId,
-          title,
-          content,
-          departmentId: departmentId || null,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        toast("Announcement created successfully!")
-        router.push("/admin/announcements")
-      } else {
-        toast("Failed to create announcement. " + data.message)
+      const payload = {
+        ...values,
+        collegeId: currentUser?.collegeid,
+        authorId: currentUser?._id,
+        authorRole: currentUser?.role === "admin" ? "admin" : "teacher",
       }
-    } catch (err: unknown) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Unknown error occurred"
-      toast("Error creating announcement. " + errorMessage)
-      console.error(err)
+
+      const response = await api.post(
+        `/announcements/${currentUser?._id}`,
+        payload
+      )
+      if (response.data.success) {
+        toast("Success Announcement has been created successfully.")
+        form.reset()
+        router.push("/admin/announcements/get")
+      } else {
+        toast("Error Failed to create announcement. " + response.data.message)
+      }
+    } catch (error: any) {
+      console.error("Error creating announcement:", error)
+      toast("Error Failed to create announcement. Please try again")
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   return (
-    <div className="container mx-auto py-10 px-4">
-      <h1 className="text-3xl font-bold text-center mb-8">
-        Create New Announcement
-      </h1>
-      {error && <div className="text-red-500 mb-4 text-center">{error}</div>}
-      {successMessage && (
-        <div className="text-green-500 mb-4 text-center">{successMessage}</div>
+    <div className="container mx-auto px-4 py-8">
+      {isLoading ? (
+        <div className="flex justify-center">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      ) : (
+        <Card className="w-full max-w-2xl mx-auto">
+          <CardHeader>
+            <CardTitle>Create Announcement</CardTitle>
+            <CardDescription>
+              Share important information with students and faculty
+            </CardDescription>
+          </CardHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+              <CardContent className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Title</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Enter announcement title"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Keep it clear and concise
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="content"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Content</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Enter announcement details"
+                          className="min-h-[150px]"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+              <CardFooter className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  type="button"
+                  onClick={() => form.reset()}
+                >
+                  Reset
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    "Post Announcement"
+                  )}
+                </Button>
+              </CardFooter>
+            </form>
+          </Form>
+        </Card>
       )}
-      <form onSubmit={handleSubmit} className="max-w-md mx-auto space-y-6">
-        <div>
-          <Label htmlFor="title">Title</Label>
-          <Input
-            type="text"
-            id="title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-            placeholder="Enter announcement title"
-          />
-        </div>
-        <div>
-          <Label htmlFor="content">Content</Label>
-          <Textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            required
-            placeholder="Enter announcement content"
-            rows={5}
-            className="w-full"
-          />
-        </div>
-        <div>
-          <Label htmlFor="departmentId">
-            Department (Optional - for department-specific announcements)
-          </Label>
-          <Select onValueChange={setDepartmentId}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select a department (optional)" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">College-wide</SelectItem>
-              {departments.map((dept: Department) => (
-                <SelectItem key={dept._id} value={dept._id}>
-                  {dept.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <Button type="submit" className="w-full">
-          Create Announcement
-        </Button>
-      </form>
     </div>
   )
 }
-
-export default CreateAnnouncementPage

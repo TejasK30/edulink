@@ -4,29 +4,15 @@ import api from "./api"
 
 export type UserRoleType = "student" | "teacher" | "admin"
 
-export type User =
-  | {
-      _id: string
-      name: string
-      email: string
-      role: "student"
-      collegname: string
-      collegeid: string
-      department?: string
-    }
-  | {
-      _id: string
-      name: string
-      email: string
-      role: "teacher" | "admin"
-      collegeid: string
-      collegname: string
-      departments: string[]
-      admins: string[]
-      teachers: string[]
-      students: string[]
-    }
-  | null
+export type User = {
+  _id: string
+  name: string
+  email: string
+  role: UserRoleType
+  collegeid: string
+  collegname: string
+  departmentid: string
+} | null
 
 type College = {
   id: string

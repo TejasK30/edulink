@@ -6,32 +6,9 @@ import { useRouter } from "next/navigation"
 import React, { createContext, useContext, useState } from "react"
 import { toast } from "sonner"
 import { useAppStore } from "./store"
+import { User } from "./store"
 
 export type UserRoleType = "admin" | "teacher" | "student"
-
-export type User =
-  | {
-      _id: string
-      name: string
-      email: string
-      role: "student"
-      collegname: string
-      collegeid: string
-      department?: string
-    }
-  | {
-      _id: string
-      name: string
-      email: string
-      role: "teacher" | "admin"
-      collegeid: string
-      collegname: string
-      departments: string[]
-      admins: string[]
-      teachers: string[]
-      students: string[]
-    }
-  | null
 
 type AuthContextType = {
   currentUser: User
@@ -96,37 +73,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email,
         password,
       })
-      const backendUser = response.data.user
 
-      let mappedUser: User
-      if (backendUser.role === "student") {
-        mappedUser = {
-          _id: backendUser._id,
-          name: backendUser.name,
-          email: backendUser.email,
-          role: "student",
-          collegeid: backendUser.collegeId,
-          collegname: backendUser.collegeName || "",
-          department: backendUser.department,
-        }
-      } else {
-        mappedUser = {
-          _id: backendUser._id,
-          name: backendUser.name,
-          email: backendUser.email,
-          role: backendUser.role,
-          collegeid: backendUser.collegeId,
-          collegname: backendUser.collegeName || "",
-          departments: backendUser.departments || [],
-          admins: backendUser.admins || [],
-          teachers: backendUser.teachers || [],
-          students: backendUser.students || [],
-        }
-      }
-
-      setUser(mappedUser)
-      toast(`Login successful \nWelcome back, ${mappedUser.name}!`)
-      redirectBasedOnRole(mappedUser)
+      setUser(response.data.user)
+      toast(`Login successful \nWelcome back, ${response.data.user.name}!`)
+      redirectBasedOnRole(response.data.user)
       return { success: true }
     } catch (error) {
       const errorMessage =
@@ -217,7 +167,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return (
     <AuthContext.Provider
       value={{
-        currentUser: currentUser,
+        currentUser,
         isLoading,
         login,
         register,
