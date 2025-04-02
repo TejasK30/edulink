@@ -7,7 +7,6 @@ import jwt from "jsonwebtoken"
 import Department, { IDepartment } from "../models/Department"
 import mongoose from "mongoose"
 
-// Schemas for validation
 const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),

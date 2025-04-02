@@ -3,10 +3,12 @@
 import {
   AlertCircle,
   BarChart2,
+  Book,
   Briefcase,
   Building2,
+  Check,
   DollarSign,
-  NotebookPen,
+  GraduationCap,
   School,
 } from "lucide-react"
 import React, { useEffect, useState } from "react"
@@ -20,7 +22,7 @@ import {
   SidebarHeader,
 } from "./ui/sidebar"
 
-const teacherNavItems = [
+const TeacherNavItems = [
   {
     title: "Dashboard",
     url: "/teacher/dashboard",
@@ -37,24 +39,36 @@ const teacherNavItems = [
   },
   {
     title: "Assignments",
-    icon: NotebookPen,
+    icon: Book,
     items: [
-      { title: "Create Assignment", url: "/teacher/assignments/create" },
-      { title: "Get Assignments", url: "/teacher/assignments/get" },
+      { title: "Create", url: "/teacher/assignments/create" },
+      { title: "List", url: "/teacher/assignments/list" },
     ],
   },
   {
-    title: "Assignments",
-    icon: NotebookPen,
-    items: [
-      { title: "Create Assignment", url: "/teacher/assignments/create" },
-      { title: "Get Assignments", url: "/teacher/assignments/get" },
-    ],
+    title: "Attendance",
+    icon: Check,
+    items: [{ title: "Create", url: "/teacher/attendance/create" }],
+  },
+  {
+    title: "Course",
+    url: "/teacher/course",
+    icon: GraduationCap,
+  },
+  {
+    title: "Grading",
+    url: "/teacher/grade",
+    icon: GraduationCap,
   },
   {
     title: "Jobs",
     icon: Briefcase,
-    items: [{ title: "Create Job", url: "/teacher/jobs/create" }],
+    items: [{ title: "Create", url: "/teacher/jobs/create" }],
+  },
+  {
+    title: "Academics",
+    url: "/teacher/academics",
+    icon: Book,
   },
 ]
 
@@ -64,12 +78,12 @@ type Department = {
   plan: string
 }
 
-type AdminSidebarProps = React.ComponentProps<typeof Sidebar> & {
-  adminId?: string
+type TeacherSidebarProps = React.ComponentProps<typeof Sidebar> & {
+  teacherId?: string
   departments?: Department[]
 }
 
-type AdminData = {
+type TeacherData = {
   user: {
     name: string
     email: string
@@ -79,10 +93,10 @@ type AdminData = {
 }
 
 export default function TeacherSidebar({
-  adminId,
+  teacherId,
   departments = [],
   ...props
-}: AdminSidebarProps) {
+}: TeacherSidebarProps) {
   const defaultDepartments: Department[] = React.useMemo(() => {
     return departments.length
       ? departments
@@ -93,39 +107,39 @@ export default function TeacherSidebar({
         ]
   }, [departments])
 
-  const [adminData, setAdminData] = useState<AdminData>({
+  const [teacherData, setTeacherData] = useState<TeacherData>({
     user: {
-      name: "Admin User",
-      email: "admin@college.edu",
-      avatar: "/avatars/admin.jpg",
+      name: "Teacher User",
+      email: "teacher@college.edu",
+      avatar: "/avatars/teacher.jpg",
     },
     departments: defaultDepartments,
   })
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
-    if (!adminId) return
-    const fetchAdminData = async () => {
+    if (!teacherId) return
+    const fetchTeacherData = async () => {
       setIsLoading(true)
       try {
-        const res = await fetch(`/api/staff/${adminId}`)
+        const res = await fetch(`/api/staff/${teacherId}`)
         const data = await res.json()
-        setAdminData({
+        setTeacherData({
           user: {
             name: `${data.firstName} ${data.lastName}`,
             email: data.user.email,
-            avatar: "/avatars/admin.jpg",
+            avatar: "/avatars/teacher.jpg",
           },
           departments: departments.length ? departments : defaultDepartments,
         })
       } catch (err: unknown) {
-        console.error("Failed to fetch admin data:", err)
+        console.error("Failed to fetch teacher data:", err)
       } finally {
         setIsLoading(false)
       }
     }
-    fetchAdminData()
-  }, [adminId, departments, defaultDepartments])
+    fetchTeacherData()
+  }, [teacherId, departments, defaultDepartments])
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -133,14 +147,14 @@ export default function TeacherSidebar({
         {isLoading ? (
           <div className="text-sm text-gray-500">Loading...</div>
         ) : (
-          <TeamSwitcher teams={adminData.departments} />
+          <TeamSwitcher teams={teacherData.departments} />
         )}
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={teacherNavItems} />
+        <NavMain items={TeacherNavItems} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={adminData.user} />
+        <NavUser user={teacherData.user} />
       </SidebarFooter>
     </Sidebar>
   )

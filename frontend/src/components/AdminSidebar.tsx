@@ -3,10 +3,12 @@
 import {
   AlertCircle,
   BarChart2,
+  Book,
   Briefcase,
   Building2,
   DollarSign,
   School,
+  Settings,
   User,
 } from "lucide-react"
 import React, { useEffect, useState } from "react"
@@ -40,7 +42,7 @@ const AdminNavItems = [
     icon: User,
     items: [
       { title: "Admin", url: "/admin/users/admin" },
-      { title: "Student", url: "/admin/users/students" },
+      { title: "Students", url: "/admin/users/students" },
       { title: "Teacher", url: "/admin/users/teacher" },
     ],
   },
@@ -48,6 +50,19 @@ const AdminNavItems = [
     title: "Jobs",
     icon: Briefcase,
     items: [{ title: "Create Job", url: "/admin/jobs/create" }],
+  },
+  {
+    title: "Academics",
+    icon: Book,
+    items: [{ title: "Course List", url: "/admin/academics/course-list" }],
+  },
+  {
+    title: "Setup",
+    icon: Settings,
+    items: [
+      { title: "Course Setup", url: "/admin/course-setup" },
+      { title: "Semester Setup", url: "/admin/semester-setup" },
+    ],
   },
 ]
 

@@ -1,174 +1,553 @@
 "use client"
-import { useRouter } from "next/navigation"
+
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { dashboardService } from "@/lib/dashboard-service"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import {
+  CalendarIcon,
+  GraduationCapIcon,
+  BookOpenIcon,
+  UserCheckIcon,
+  BriefcaseIcon,
+  AlertCircleIcon,
+  UsersIcon,
+  PlusIcon,
+} from "lucide-react"
+import { Progress } from "@/components/ui/progress"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useAppStore } from "@/lib/store"
+
+interface TeacherInfo {
+  name: string
+  email: string
+  college: string
+  department: string
+}
+
+interface CurrentSemester {
+  name: string
+  year: number
+}
 
 interface Course {
   _id: string
   name: string
   code: string
+  credits: number
+  capacity?: number
+}
+
+interface CourseEnrollment {
+  courseId: string
+  courseName: string
+  courseCode: string
+  studentCount: number
 }
 
 interface Assignment {
   _id: string
   title: string
   dueDate: string
+  courseId: {
+    name: string
+  }
 }
 
-interface Announcement {
+interface Grade {
+  _id: string
+  studentId: {
+    name: string
+  } | null
+  courseId: {
+    name: string
+  }
+  assignmentId: {
+    title: string
+  }
+  score: number
+}
+
+interface AttendanceSummary {
+  _id: string
+  courseName: string
+  courseCode: string
+  present: number
+  absent: number
+  total: number
+  attendanceRate: number
+}
+
+interface JobPosting {
   _id: string
   title: string
-  content: string
+  company: string
+  location: string
+  type: string
   createdAt: string
 }
 
-const TeacherDashboardPage = () => {
-  const [coursesTeaching, setCoursesTeaching] = useState<Course[]>([])
-  const [upcomingAssignmentsToGrade, setUpcomingAssignmentsToGrade] = useState<
-    Assignment[]
-  >([])
-  const [recentAnnouncements, setRecentAnnouncements] = useState<
-    Announcement[]
-  >([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+interface DashboardData {
+  teacherInfo: TeacherInfo
+  currentSemester: CurrentSemester | null
+  courses: Course[]
+  courseEnrollments: CourseEnrollment[]
+  upcomingAssignments: Assignment[]
+  recentGrades: Grade[]
+  attendanceSummary: AttendanceSummary[]
+  jobPostings: JobPosting[]
+}
+
+const TeacherDashboard = () => {
   const router = useRouter()
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
+  const [loading, setLoading] = useState<boolean>(true)
+  const [error, setError] = useState<string | null>(null)
+  const { currentUser } = useAppStore()
 
   useEffect(() => {
     const fetchDashboardData = async () => {
-      setLoading(true)
-      setError(null)
-      const teacherId = localStorage.getItem("teacherId")
-      if (!teacherId) {
-        router.push("/teacher/login")
-        return
-      }
       try {
-        const response = await fetch(
-          "http://localhost:5000/api/teacher/dashboard-data",
-          {
-            headers: {
-              "x-teacher-id": teacherId,
-            },
-          }
-        )
-        if (response.ok) {
-          const data = await response.json()
-          setCoursesTeaching(data.coursesTeaching || [])
-          setUpcomingAssignmentsToGrade(data.upcomingAssignmentsToGrade || [])
-          setRecentAnnouncements(data.recentAnnouncements || [])
-        } else {
-          const errorData = await response.json()
-          setError(errorData.message || "Failed to fetch dashboard data.")
+        if (!currentUser) return
+
+        if (currentUser.role !== "teacher") {
+          router.push(`/${currentUser.role}/dashboard`)
+          return
         }
-      } catch (error) {
-        setError("Error fetching dashboard data.")
-        console.error(error)
+
+        const response = await dashboardService.getTeacherDashboard(
+          currentUser._id as string
+        )
+        setDashboardData(response.data)
+      } catch (err) {
+        setError("Failed to load dashboard data")
+        console.error(err)
       } finally {
         setLoading(false)
       }
     }
-
     fetchDashboardData()
-  }, [router])
+  }, [currentUser, router])
 
-  if (loading)
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        Loading dashboard data...
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {[...Array(6)].map((_, i) => (
+          <Card key={i}>
+            <CardHeader>
+              <Skeleton className="h-6 w-1/2" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-20 w-full" />
+            </CardContent>
+          </Card>
+        ))}
       </div>
     )
-  if (error)
+  }
+
+  if (error || !dashboardData) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-red-500">
-        {error}
-      </div>
+      <Card className="border-red-200 bg-red-50">
+        <CardHeader>
+          <CardTitle className="text-red-600 flex items-center">
+            <AlertCircleIcon className="mr-2" size={20} />
+            Error Loading Dashboard
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-red-600">
+            {error || "Failed to load dashboard data"}
+          </p>
+        </CardContent>
+      </Card>
     )
+  }
+
+  const {
+    teacherInfo,
+    currentSemester,
+    courses,
+    courseEnrollments,
+    upcomingAssignments,
+    recentGrades,
+    attendanceSummary,
+    jobPostings,
+  } = dashboardData
+
+  const totalStudents = courseEnrollments.reduce(
+    (sum: number, course: CourseEnrollment) => sum + course.studentCount,
+    0
+  )
+
+  const averageAttendance =
+    attendanceSummary.length > 0
+      ? Math.round(
+          attendanceSummary.reduce(
+            (sum: number, course: AttendanceSummary) =>
+              sum + course.attendanceRate,
+            0
+          ) / attendanceSummary.length
+        )
+      : 0
 
   return (
-    <div className="container mx-auto py-10 px-4">
-      <h1 className="text-3xl font-bold text-center mb-8">Teacher Dashboard</h1>
-
-      {/* Courses Section */}
-      <section className="mb-8">
-        <h2 className="text-2xl font-semibold mb-4">
-          Courses You Are Teaching
-        </h2>
-        {coursesTeaching.length > 0 ? (
-          <ul className="space-y-2">
-            {coursesTeaching.map((course: Course) => (
-              <li
-                key={course._id}
-                className="p-4 bg-white rounded shadow flex justify-between items-center"
-              >
-                <span className="font-medium">{course.name}</span>
-                <span className="text-gray-500">({course.code})</span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p>No courses assigned to you yet.</p>
-        )}
-      </section>
-
-      {/* Assignments Section */}
-      <section className="mb-8">
-        <h2 className="text-2xl font-semibold mb-4">
-          Upcoming Assignments to Grade
-        </h2>
-        {upcomingAssignmentsToGrade.length > 0 ? (
-          <ul className="space-y-2">
-            {upcomingAssignmentsToGrade.map((assignment: Assignment) => (
-              <li
-                key={assignment._id}
-                className="p-4 bg-white rounded shadow flex justify-between items-center"
-              >
-                <span className="font-medium">{assignment.title}</span>
-                <span className="text-gray-500">
-                  Due: {new Date(assignment.dueDate).toLocaleDateString()}
-                </span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p>No upcoming assignments to grade.</p>
-        )}
-      </section>
-
-      {/* Announcements Section */}
-      <section className="mb-8">
-        <h2 className="text-2xl font-semibold mb-4">Recent Announcements</h2>
-        {recentAnnouncements.length > 0 ? (
-          <ul className="space-y-4">
-            {recentAnnouncements.map((announcement: Announcement) => (
-              <li
-                key={announcement._id}
-                className="p-4 bg-gray-100 rounded shadow"
-              >
-                <h3 className="text-xl font-semibold">{announcement.title}</h3>
-                <p className="mt-2 text-gray-700">
-                  {announcement.content.substring(0, 100)}...
-                </p>
-                <p className="mt-1 text-sm text-gray-500">
-                  {new Date(announcement.createdAt).toLocaleDateString()}
-                </p>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p>No recent announcements.</p>
-        )}
-      </section>
-
-      {/* Navigation Buttons */}
-      <div className="flex flex-wrap justify-center gap-4">
-        <Button onClick={() => router.push("/teacher/assignments/create")}>
-          Create Assignment
-        </Button>
-        {/* Additional teacher functionalities can be added here */}
+    <div className="space-y-8">
+      <div className="p-6 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-lg text-white">
+        <h1 className="text-2xl font-bold">
+          Welcome back, Professor{" "}
+          {teacherInfo.name.split(" ")[1] || teacherInfo.name}!
+        </h1>
+        <p className="mt-1">
+          Current Semester: {currentSemester?.name} {currentSemester?.year}
+        </p>
       </div>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">My Courses</CardTitle>
+            <BookOpenIcon className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{courses.length}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {currentSemester?.name} {currentSemester?.year}
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">
+              Total Students
+            </CardTitle>
+            <UsersIcon className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalStudents}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Across all courses
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">
+              Attendance Rate
+            </CardTitle>
+            <UserCheckIcon className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{averageAttendance}%</div>
+            <p className="text-xs text-muted-foreground mt-1">Class average</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">
+              Pending Assignments
+            </CardTitle>
+            <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {upcomingAssignments.length}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Assignments due soon
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+      <Tabs defaultValue="courses" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="courses">My Courses</TabsTrigger>
+          <TabsTrigger value="assignments">Assignments</TabsTrigger>
+          <TabsTrigger value="grades">Recent Grades</TabsTrigger>
+          <TabsTrigger value="attendance">Attendance</TabsTrigger>
+          <TabsTrigger value="jobs">Job Board</TabsTrigger>
+        </TabsList>
+        <TabsContent value="courses" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">My Courses</h2>
+            <Button size="sm">
+              <PlusIcon className="mr-2 h-4 w-4" />
+              Add Course
+            </Button>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {courses.map((course: Course) => {
+              const enrollment = courseEnrollments.find(
+                (e: CourseEnrollment) =>
+                  e.courseId.toString() === course._id.toString()
+              )
+              return (
+                <Card key={course._id}>
+                  <CardHeader>
+                    <CardTitle>{course.name}</CardTitle>
+                    <CardDescription>
+                      <span className="font-mono">{course.code}</span> •{" "}
+                      {course.credits} Credits
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex justify-between text-sm">
+                        <span>Students Enrolled:</span>
+                        <span className="font-medium">
+                          {enrollment?.studentCount || 0}
+                          {course.capacity ? ` / ${course.capacity}` : ""}
+                        </span>
+                      </div>
+                      {course.capacity && (
+                        <div className="space-y-1.5">
+                          <div className="flex justify-between text-sm">
+                            <span>Capacity:</span>
+                            <span>
+                              {Math.round(
+                                ((enrollment?.studentCount || 0) /
+                                  course.capacity) *
+                                  100
+                              )}
+                              %
+                            </span>
+                          </div>
+                          <Progress
+                            value={
+                              ((enrollment?.studentCount || 0) /
+                                course.capacity) *
+                              100
+                            }
+                            className="h-2"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                  <CardFooter>
+                    <Button variant="outline" className="w-full">
+                      View Course
+                    </Button>
+                  </CardFooter>
+                </Card>
+              )
+            })}
+          </div>
+        </TabsContent>
+        <TabsContent value="assignments" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">Upcoming Assignments</h2>
+            <Button size="sm">
+              <PlusIcon className="mr-2 h-4 w-4" />
+              Create Assignment
+            </Button>
+          </div>
+          {upcomingAssignments.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Course</TableHead>
+                  <TableHead>Due Date</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {upcomingAssignments.map((assignment: Assignment) => (
+                  <TableRow key={assignment._id}>
+                    <TableCell className="font-medium">
+                      {assignment.title}
+                    </TableCell>
+                    <TableCell>{assignment.courseId.name}</TableCell>
+                    <TableCell>
+                      {new Date(assignment.dueDate).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          new Date(assignment.dueDate) <=
+                          new Date(
+                            new Date().getTime() + 2 * 24 * 60 * 60 * 1000
+                          )
+                            ? "destructive"
+                            : "secondary"
+                        }
+                      >
+                        {new Date(assignment.dueDate) <=
+                        new Date(new Date().getTime() + 2 * 24 * 60 * 60 * 1000)
+                          ? "Due Soon"
+                          : "Pending"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button size="sm" variant="outline">
+                        View
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <Card>
+              <CardContent className="text-center py-8">
+                <CalendarIcon className="mx-auto h-6 w-6 text-muted-foreground mb-2" />
+                <p className="text-sm text-muted-foreground">
+                  No upcoming assignments found.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+        <TabsContent value="grades">
+          <h2 className="text-xl font-semibold mb-4">Recent Grades</h2>
+          {recentGrades.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Student</TableHead>
+                  <TableHead>Course</TableHead>
+                  <TableHead>Assignment</TableHead>
+                  <TableHead>Grade</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {recentGrades.map((grade: Grade) => (
+                  <TableRow key={grade._id}>
+                    <TableCell className="font-medium">
+                      {grade.studentId && grade.studentId.name
+                        ? grade.studentId.name
+                        : "N/A"}
+                    </TableCell>
+                    <TableCell>{grade.courseId.name}</TableCell>
+                    <TableCell>{grade.assignmentId.title}</TableCell>
+                    <TableCell>{grade.score}%</TableCell>
+                    <TableCell className="text-right">
+                      <Button size="sm" variant="outline">
+                        View Details
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <Card>
+              <CardContent className="text-center py-8">
+                <GraduationCapIcon className="mx-auto h-6 w-6 text-muted-foreground mb-2" />
+                <p className="text-sm text-muted-foreground">
+                  No recent grades available.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+        <TabsContent value="attendance">
+          <h2 className="text-xl font-semibold mb-4">Attendance Summary</h2>
+          {attendanceSummary.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Course</TableHead>
+                  <TableHead>Total Sessions</TableHead>
+                  <TableHead>Sessions Attended</TableHead>
+                  <TableHead>Attendance Rate</TableHead>
+                  <TableHead className="text-right">Details</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {attendanceSummary.map((summary: AttendanceSummary) => (
+                  <TableRow key={summary._id}>
+                    <TableCell className="font-medium">
+                      {summary.courseName}
+                    </TableCell>
+                    <TableCell>{summary.total}</TableCell>
+                    <TableCell>{summary.present}</TableCell>
+                    <TableCell>{summary.attendanceRate}%</TableCell>
+                    <TableCell className="text-right">
+                      <Button size="sm" variant="outline">
+                        View
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <Card>
+              <CardContent className="text-center py-8">
+                <UserCheckIcon className="mx-auto h-6 w-6 text-muted-foreground mb-2" />
+                <p className="text-sm text-muted-foreground">
+                  No attendance data available.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+        <TabsContent value="jobs">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold">Job Postings</h2>
+            <Button size="sm">
+              <PlusIcon className="mr-2 h-4 w-4" />
+              Add Job
+            </Button>
+          </div>
+          {jobPostings.length > 0 ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {jobPostings.map((job: JobPosting) => (
+                <Card key={job._id}>
+                  <CardHeader>
+                    <CardTitle>{job.title}</CardTitle>
+                    <CardDescription>{job.company}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <p className="text-sm text-muted-foreground">
+                      <BriefcaseIcon className="mr-1 inline-block h-4 w-4" />
+                      {job.location}
+                    </p>
+                    <Badge>{job.type}</Badge>
+                  </CardContent>
+                  <CardFooter>
+                    <Button variant="outline" className="w-full">
+                      View Details
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="text-center py-8">
+                <BriefcaseIcon className="mx-auto h-6 w-6 text-muted-foreground mb-2" />
+                <p className="text-sm text-muted-foreground">
+                  No job postings available.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
 
-export default TeacherDashboardPage
+export default TeacherDashboard

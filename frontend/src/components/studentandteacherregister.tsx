@@ -92,7 +92,7 @@ export function StudentTeacherRegistrationForm({
       try {
         const response = await api.get("auth/colleges")
         if (response.status === 200 && response.data) {
-          setColleges(response.data)
+          setColleges(response.data.data)
         } else {
           console.error("Failed to fetch colleges: Unexpected response")
         }

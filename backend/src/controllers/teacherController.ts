@@ -4,6 +4,7 @@ import mongoose, { Types } from "mongoose"
 import Course from "../models/Course"
 import User, { UserRole } from "../models/user"
 import Department from "../models/Department"
+import Grade from "../models/Grade"
 
 export const createAssignment = async (
   req: Request,
@@ -212,5 +213,92 @@ export const getTeacherDepartments = async (
     res.status(200).json(departments)
   } catch (error) {
     res.status(500).json({ message: "Server error", error })
+  }
+}
+
+export const gradeStudentsInCourse = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { teacherId } = req.params
+    const { courseId, gradeType, assignmentId, grades } = req.body
+
+    console.log("Request Body:", req.body)
+
+    const teacher = await User.findById(teacherId)
+    if (!teacher || teacher.role !== UserRole.TEACHER) {
+      return res.status(403).json({ message: "Unauthorized", success: false })
+    }
+
+    const course = await Course.findById(courseId)
+    if (!course) {
+      return res
+        .status(404)
+        .json({ message: "Course not found", success: false })
+    }
+    if (course.teacherId?.toString() !== teacherId) {
+      return res.status(403).json({
+        message: "You are not assigned to this course",
+        success: false,
+      })
+    }
+
+    if (gradeType === "assignment" && !assignmentId) {
+      return res.status(400).json({
+        message: "Assignment ID is required for assignment grading",
+        success: false,
+      })
+    }
+
+    const createdGrades = []
+    for (const entry of grades) {
+      const gradeDoc = new Grade({
+        studentId: entry.studentId,
+        collegeId: teacher.college,
+        courseId,
+        assignmentId: gradeType === "assignment" ? assignmentId : undefined,
+        teacherId: teacherId,
+        gradeValue: entry.gradeValue,
+        gradeType,
+        notes: entry.notes,
+      })
+      await gradeDoc.save()
+      createdGrades.push(gradeDoc)
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: "Grades assigned successfully",
+      grades: createdGrades,
+    })
+  } catch (error: any) {
+    console.error("Error assigning grades:", error)
+    return res
+      .status(500)
+      .json({ success: false, message: "Server error", error: error.message })
+  }
+}
+
+export const getEnrolledStudentsForCourse = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { courseId } = req.params
+    if (!mongoose.Types.ObjectId.isValid(courseId)) {
+      return res.status(400).json({ message: "Invalid course ID" })
+    }
+    const course = await Course.findById(courseId).populate(
+      "enrolledStudents",
+      "name email"
+    )
+    if (!course) return res.status(404).json({ message: "Course not found" })
+    return res.status(200).json(course.enrolledStudents)
+  } catch (error: any) {
+    console.error("Error fetching enrolled students:", error)
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message })
   }
 }

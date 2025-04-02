@@ -92,7 +92,7 @@ export function AdminRegistrationForm({ onBack }: AdminRegistrationFormProps) {
         const response = await api.get("auth/colleges")
 
         if (response.status === 200 && response.data) {
-          setColleges(response.data)
+          setColleges(response.data.data)
         } else {
           console.error("Failed to fetch colleges: Unexpected response")
         }
@@ -283,7 +283,7 @@ export function AdminRegistrationForm({ onBack }: AdminRegistrationFormProps) {
               name="collegeLocation"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>College Location (Optional)</FormLabel>
+                  <FormLabel>College Location </FormLabel>
                   <FormControl>
                     <Input
                       placeholder="Enter college location"
@@ -300,7 +300,7 @@ export function AdminRegistrationForm({ onBack }: AdminRegistrationFormProps) {
               name="departments"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Departments (Optional, comma-separated)</FormLabel>
+                  <FormLabel>Departments (comma-separated)</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="Enter departments (e.g., Computer Science, Electrical Engineering)"

@@ -48,9 +48,7 @@ export function LoginForm() {
     try {
       const result = await login(values.email, values.password, values.remember)
       if (result?.success) {
-        router.push("/dashboard")
-      } else {
-        toast(result?.message || "Login failed")
+        router.push(`/${result.data.user.role}/dashboard`)
       }
     } catch (error: any) {
       console.error(error)

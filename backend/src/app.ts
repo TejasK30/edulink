@@ -11,6 +11,7 @@ import teacherRoutes from "./routes/teacherRoutes"
 import userRoutes from "./routes/userroutes"
 import announceMentRoutes from "./routes/announcementRoutes"
 import assignmentRoutes from "./routes/assignmentRoutes"
+import dashboardRoutes from "./routes/dashboardRoutes"
 
 const app = express()
 const PORT = process.env.PORT || 5000
@@ -66,6 +67,7 @@ export const authorizeRole = (
 
 app.use("/api/auth/", authRoutes)
 app.use("/api", userRoutes)
+app.use("/api/dashboard/", dashboardRoutes)
 app.use("/api/admin/", adminRoutes)
 app.use("/api/courses/", courseRoutes)
 app.use("/api/attendance/", attendaceRoutes)

@@ -26,7 +26,6 @@ export const createAnnouncement = async (
       })
     }
 
-    // Only admins and teachers can create announcements
     if (user.role !== UserRole.ADMIN && user.role !== UserRole.TEACHER) {
       return res.status(403).json({
         success: false,
@@ -34,7 +33,6 @@ export const createAnnouncement = async (
       })
     }
 
-    // Create announcement data without departmentId
     const announcementData: Partial<IAnnouncement> = {
       title,
       content,

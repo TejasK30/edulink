@@ -77,7 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(response.data.user)
       toast(`Login successful \nWelcome back, ${response.data.user.name}!`)
       redirectBasedOnRole(response.data.user)
-      return { success: true }
+      return { success: true, data: response.data }
     } catch (error) {
       const errorMessage =
         error instanceof AxiosError
