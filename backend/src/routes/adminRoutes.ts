@@ -2,12 +2,13 @@ import { Router } from "express"
 import {
   adminDashboard,
   createAnnouncement,
-  createJobPosting,
+  createJobPostingByAdmin,
   createSemester,
   createUser,
   deleteUser,
   getAdmins,
   getAllUsers,
+  getJobsByCollegeAdmin,
   getSemestersByCollege,
   getStudents,
   getTeachers,
@@ -28,9 +29,10 @@ router.put("/users/:id", updateUser)
 router.delete("/users/:id", deleteUser)
 router.get("/dashboard-data", adminDashboard)
 router.post("/announcements/create", createAnnouncement)
-router.post("/jobs", createJobPosting)
+router.post("/job-postings/:adminId", createJobPostingByAdmin)
 router.post("/semesters/:collegId", createSemester)
 router.patch("/semesters/:id", toggleSemesterStatus)
 router.get("/colleges/:collegeId/semesters", getSemestersByCollege)
+router.get("/jobs/:collegeId", getJobsByCollegeAdmin)
 
 export default router

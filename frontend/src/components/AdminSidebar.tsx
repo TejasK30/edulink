@@ -21,6 +21,7 @@ import {
   SidebarFooter,
   SidebarHeader,
 } from "./ui/sidebar"
+import { useAppStore } from "@/lib/store"
 
 const AdminNavItems = [
   {
@@ -49,7 +50,10 @@ const AdminNavItems = [
   {
     title: "Jobs",
     icon: Briefcase,
-    items: [{ title: "Create Job", url: "/admin/jobs/create" }],
+    items: [
+      { title: "Create", url: "/admin/assignments/create" },
+      { title: "List", url: "/admin/assignments/list" },
+    ],
   },
   {
     title: "Academics",
@@ -91,6 +95,7 @@ export default function AdminSidebar({
   departments = [],
   ...props
 }: AdminSidebarProps) {
+  const { currentUser } = useAppStore()
   const defaultDepartments: Department[] = React.useMemo(() => {
     return departments.length
       ? departments
@@ -103,8 +108,8 @@ export default function AdminSidebar({
 
   const [adminData, setAdminData] = useState<AdminData>({
     user: {
-      name: "Admin User",
-      email: "admin@college.edu",
+      name: currentUser?.name as string,
+      email: currentUser?.email as string,
       avatar: "/avatars/admin.jpg",
     },
     departments: defaultDepartments,

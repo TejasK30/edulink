@@ -13,7 +13,7 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: "Edumanage - Education Management System",
+  title: "Edulink - Education Management System",
   description: "A comprehensive education management system",
 }
 

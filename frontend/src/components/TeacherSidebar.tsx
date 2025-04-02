@@ -21,6 +21,7 @@ import {
   SidebarFooter,
   SidebarHeader,
 } from "./ui/sidebar"
+import { useAppStore } from "@/lib/store"
 
 const TeacherNavItems = [
   {
@@ -63,7 +64,10 @@ const TeacherNavItems = [
   {
     title: "Jobs",
     icon: Briefcase,
-    items: [{ title: "Create", url: "/teacher/jobs/create" }],
+    items: [
+      { title: "Create", url: "/teacher/jobs/create" },
+      { title: "List", url: "/teacher/jobs/list" },
+    ],
   },
   {
     title: "Academics",
@@ -97,6 +101,7 @@ export default function TeacherSidebar({
   departments = [],
   ...props
 }: TeacherSidebarProps) {
+  const { currentUser } = useAppStore()
   const defaultDepartments: Department[] = React.useMemo(() => {
     return departments.length
       ? departments
@@ -109,10 +114,11 @@ export default function TeacherSidebar({
 
   const [teacherData, setTeacherData] = useState<TeacherData>({
     user: {
-      name: "Teacher User",
-      email: "teacher@college.edu",
-      avatar: "/avatars/teacher.jpg",
+      name: currentUser?.name as string,
+      email: currentUser?.email as string,
+      avatar: "/avatars/admin.jpg",
     },
+
     departments: defaultDepartments,
   })
   const [isLoading, setIsLoading] = useState(false)

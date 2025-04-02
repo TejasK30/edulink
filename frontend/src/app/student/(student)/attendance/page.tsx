@@ -1,7 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
   TableBody,
@@ -11,8 +10,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import api from "@/lib/api"
+import { useAppStore } from "@/lib/store"
 import { format } from "date-fns"
-import { useToast } from "@/hooks/use-toast"
+import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
+import { toast } from "sonner"
 
 interface AttendanceRecord {
   _id: string
@@ -21,63 +24,42 @@ interface AttendanceRecord {
   status: "present" | "absent"
 }
 
-const StudentAttendancePage = () => {
+export default function StudentAttendancePage() {
   const [attendanceRecords, setAttendanceRecords] = useState<
     AttendanceRecord[]
   >([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
-  const { toast } = useToast()
+  const { currentUser } = useAppStore()
 
   useEffect(() => {
     const fetchAttendance = async () => {
       setLoading(true)
       setError(null)
-      const studentId = localStorage.getItem("studentId")
-      if (!studentId) {
-        router.push("/student/login")
-        return
-      }
+
+      if (!currentUser) return
+
       try {
-        const response = await fetch("/api/student/attendance", {
-          headers: {
-            "x-student-id": studentId,
-          },
-        })
-        if (response.ok) {
-          const data: AttendanceRecord[] = await response.json()
-          setAttendanceRecords(data)
-        } else {
-          const errorData = await response.json()
-          setError(errorData.message || "Failed to fetch attendance.")
-          toast({
-            title: errorData.message || "Fetch Error",
-            variant: "destructive",
-          })
-        }
-      } catch (err: unknown) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Unknown error"
-        setError("Error fetching attendance: " + errorMessage)
-        toast({
-          title: "Error fetching attendance.",
-          description: errorMessage,
-          variant: "destructive",
-        })
-        console.error(err)
+        const response = await api.get(`/student/attendance/${currentUser._id}`)
+        setAttendanceRecords(response.data)
+      } catch (err: any) {
+        console.error("Error fetching attendance:", err)
+        setError("Failed to load attendance. Please try again later.")
+        toast("Failed to load attendance. Please try again later.")
       } finally {
         setLoading(false)
       }
     }
 
     fetchAttendance()
-  }, [router, toast])
+  }, [currentUser, router])
 
   if (loading) {
     return (
       <div className="container mx-auto py-10 text-center">
-        Loading attendance...
+        <Skeleton className="h-10 w-10 mx-auto" />
+        <p>Loading attendance...</p>
       </div>
     )
   }
@@ -133,5 +115,3 @@ const StudentAttendancePage = () => {
     </div>
   )
 }
-
-export default StudentAttendancePage

@@ -1,15 +1,17 @@
 import { Router } from "express"
+import { getTeacherCourses } from "../controllers/assignmentcontroller"
 import {
   assignCourseToTeacher,
   createAssignment,
+  createJobPostingTeacher,
   getAssignmentById,
   getDepartmentCourses,
   getEnrolledStudentsForCourse,
+  getJobsByCollegeTeacher,
   getTeacherAssignments,
   getTeacherDepartments,
   gradeStudentsInCourse,
 } from "../controllers/teacherController"
-import { getTeacherCourses } from "../controllers/assignmentcontroller"
 
 const router = Router()
 
@@ -22,5 +24,7 @@ router.get("/departments/:departmentId/courses", getDepartmentCourses)
 router.post("/assign-course/:teacherId", assignCourseToTeacher)
 router.get("/:teacherId/departments", getTeacherDepartments)
 router.get("/courses/:courseId/enrolled-students", getEnrolledStudentsForCourse)
+router.post("/job-postings/:teacherId", createJobPostingTeacher)
+router.get("/jobs/:collegeId", getJobsByCollegeTeacher)
 
 export default router

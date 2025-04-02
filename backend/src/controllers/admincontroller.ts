@@ -3,7 +3,7 @@ import { z } from "zod"
 import Announcement from "../models/Announcement"
 import Course from "../models/Course"
 import Department from "../models/Department"
-import JobPosting from "../models/JobPosting"
+import JobPosting, { JobPostingDocument } from "../models/JobPosting"
 import User, { UserRole } from "../models/user"
 import College from "../models/College"
 import mongoose from "mongoose"
@@ -360,44 +360,6 @@ export const getAnnounceMents = async (
   }
 }
 
-export const createJobPosting = async (
-  req: Request,
-  res: Response
-): Promise<any> => {
-  try {
-    const { companyName, applyLink, jobDescription, collegeId } = req.body
-    const postedBy = req.user?.id
-    const role = req.user?.role
-
-    if (
-      !postedBy ||
-      (role !== "admin" && role !== "teacher") ||
-      req.user?.collegeId !== collegeId
-    ) {
-      return res.status(403).json({
-        message: "Forbidden: Cannot post job for a different college",
-      })
-    }
-
-    const newJob = new JobPosting({
-      collegeId,
-      companyName,
-      applyLink,
-      jobDescription,
-      postedBy,
-      role,
-    })
-
-    await newJob.save()
-    res
-      .status(201)
-      .json({ message: "Job posted successfully", jobId: newJob._id })
-  } catch (error: any) {
-    console.error("Error posting job:", error)
-    res.status(500).json({ message: "Server error while posting job" })
-  }
-}
-
 export const createSemester = async (
   req: Request,
   res: Response
@@ -472,5 +434,66 @@ export const getSemestersByCollege = async (
     return res
       .status(500)
       .json({ message: "Internal server error", error: error.message })
+  }
+}
+
+export const createJobPostingByAdmin = async (
+  req: Request<
+    { adminId: string },
+    {},
+    Omit<JobPostingDocument, "postedBy" | "role" | "createdAt">
+  >,
+  res: Response
+): Promise<any> => {
+  try {
+    const { adminId } = req.params
+    const { collegeId, companyName, applyLink, jobDescription } = req.body
+
+    if (!mongoose.isValidObjectId(adminId)) {
+      return res.status(400).json({ message: "Invalid admin ID" })
+    }
+    if (!mongoose.isValidObjectId(collegeId)) {
+      return res.status(400).json({ message: "Invalid college ID" })
+    }
+
+    const newJobPosting = new JobPosting({
+      collegeId,
+      companyName,
+      applyLink,
+      jobDescription,
+      postedBy: adminId,
+      role: "admin",
+    })
+
+    const savedJobPosting = await newJobPosting.save()
+    return res.status(201).json(savedJobPosting)
+  } catch (error: any) {
+    console.error("Error creating job posting by admin:", error)
+    return res.status(500).json({ message: "Failed to create job posting" })
+  }
+}
+
+export const getJobsByCollegeAdmin = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { collegeId } = req.params
+
+    if (!collegeId) {
+      return res.status(400).json({ message: "College ID is required" })
+    }
+
+    const jobs = await JobPosting.find({ collegeId }).sort({ createdAt: -1 })
+
+    if (!jobs.length) {
+      return res
+        .status(404)
+        .json({ message: "No job postings found for this college" })
+    }
+
+    res.status(200).json(jobs)
+  } catch (error) {
+    res.status(500).json({ message: "Server error" })
   }
 }

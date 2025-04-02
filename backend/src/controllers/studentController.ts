@@ -1,9 +1,11 @@
 import { Request, Response } from "express"
-import { Types } from "mongoose"
+import mongoose, { Types } from "mongoose"
 import Assignment, { IAssignment } from "../models/Assignment"
 import Course from "../models/Course"
 import Department from "../models/Department"
 import User, { UserRole } from "../models/user"
+import Attendance from "../models/Attendance"
+import JobPosting from "../models/JobPosting"
 
 export const getStudentDepartment = async (
   req: Request,
@@ -209,7 +211,7 @@ export const getEnrolledCourses = async (
     }
 
     const courses = await Course.find({ enrolledStudents: studentId })
-      .select("_id name code")
+      .select("_id name code credits")
       .lean()
 
     return res.status(200).json({ courses, success: true })
@@ -220,5 +222,54 @@ export const getEnrolledCourses = async (
       success: false,
       error: error.message,
     })
+  }
+}
+
+export const getStudentAttendance = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { studentId } = req.params
+
+    const attendanceRecords = await Attendance.find({
+      studentId: new mongoose.Types.ObjectId(studentId),
+    })
+      .sort({ date: -1 })
+      .populate("courseId", "name code")
+
+    return res.status(200).json(attendanceRecords)
+  } catch (error: any) {
+    console.error("Error fetching attendance:", error)
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    })
+  }
+}
+
+export const getJobsByCollegeStudent = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { collegeId } = req.params
+    console.log(collegeId)
+    if (!collegeId) {
+      return res.status(400).json({ message: "College ID is required" })
+    }
+
+    const jobs = await JobPosting.find({ collegeId }).sort({ createdAt: -1 })
+
+    if (!jobs.length) {
+      return res
+        .status(404)
+        .json({ message: "No job postings found for this college" })
+    }
+
+    res.status(200).json(jobs)
+  } catch (error) {
+    res.status(500).json({ message: "Server error" })
   }
 }

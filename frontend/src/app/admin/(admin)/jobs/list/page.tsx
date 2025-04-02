@@ -7,7 +7,7 @@ import JobListing, { JobPosting } from "@/components/JobListing"
 import { useAppStore } from "@/lib/store"
 import { useRouter } from "next/navigation"
 
-const StudentJobsPage = () => {
+const AdminJobsList = () => {
   const [jobs, setJobs] = useState<JobPosting[]>([])
   const [hasMounted, setHasMounted] = useState(false)
   const { currentUser } = useAppStore()
@@ -59,4 +59,4 @@ const StudentJobsPage = () => {
   )
 }
 
-export default StudentJobsPage
+export default AdminJobsList

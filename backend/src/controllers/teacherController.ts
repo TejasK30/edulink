@@ -1,10 +1,11 @@
-import { Request, Response } from "express"
+import { NextFunction, Request, Response } from "express"
 import Assignment from "../models/Assignment"
 import mongoose, { Types } from "mongoose"
 import Course from "../models/Course"
 import User, { UserRole } from "../models/user"
 import Department from "../models/Department"
 import Grade from "../models/Grade"
+import JobPosting from "../models/JobPosting"
 
 export const createAssignment = async (
   req: Request,
@@ -300,5 +301,73 @@ export const getEnrolledStudentsForCourse = async (
     return res
       .status(500)
       .json({ message: "Server error", error: error.message })
+  }
+}
+
+export const createJobPostingTeacher = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<any> => {
+  try {
+    const { teacherId } = req.params
+
+    if (!teacherId) {
+      return res.status(400).json({ message: "Teacher ID is required" })
+    }
+
+    const {
+      collegeId,
+      jobTitle,
+      companyName,
+      applyLink,
+      jobDescription,
+      location,
+      jobType,
+      deadline,
+    } = req.body
+
+    const newJobPosting = new JobPosting({
+      collegeId,
+      jobTitle,
+      companyName,
+      applyLink,
+      jobDescription,
+      postedBy: teacherId,
+      location,
+      jobType,
+      deadline,
+    })
+
+    const savedJobPosting = await newJobPosting.save()
+
+    return res.status(201).json(savedJobPosting)
+  } catch (error) {
+    next(error)
+  }
+}
+
+export const getJobsByCollegeTeacher = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { collegeId } = req.params
+
+    if (!collegeId) {
+      return res.status(400).json({ message: "College ID is required" })
+    }
+
+    const jobs = await JobPosting.find({ collegeId }).sort({ createdAt: -1 })
+
+    if (!jobs.length) {
+      return res
+        .status(404)
+        .json({ message: "No job postings found for this college" })
+    }
+
+    res.status(200).json(jobs)
+  } catch (error) {
+    res.status(500).json({ message: "Server error" })
   }
 }

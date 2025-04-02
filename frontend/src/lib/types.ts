@@ -1,3 +1,5 @@
+import { ReactNode } from "react"
+
 export type UserRoleType = "student" | "teacher" | "admin"
 
 export interface User {
@@ -88,4 +90,59 @@ export interface PaginatedResponse<T> {
     limit: number
     pages: number
   }
+}
+
+export interface Feature {
+  title: string
+  description: string
+  icon: string
+  id: string
+}
+
+export interface Testimonial {
+  id: string
+  name: string
+  role: string
+  message: string
+  avatarUrl?: string
+}
+
+export interface PricingPlan {
+  id: string
+  name: string
+  price: number
+  description: string
+  features: string[]
+  isPopular?: boolean
+  buttonText: string
+}
+
+export interface NavigationItem {
+  id: string
+  label: string
+  href: string
+  isExternal?: boolean
+}
+
+export interface Step {
+  number: number
+  label: string
+}
+
+export interface ProgressBarProps {
+  steps: Step[]
+  currentStep: number
+}
+
+export interface StatCardProps {
+  title: string
+  value: string | number
+  icon: ReactNode
+  change: string
+}
+
+export interface TitleSectionProps {
+  title: string
+  subheading?: string
+  pill: string
 }

@@ -27,15 +27,12 @@ export default function AssignCoursePage() {
   const router = useRouter()
   const { currentUser } = useAppStore()
 
-  // Debug: Log currentUser when it updates
   useEffect(() => {
     console.log("Current user:", currentUser)
   }, [currentUser])
 
-  // Use fallback to localStorage if currentUser is not ready
   const teacherId = currentUser?._id || localStorage.getItem("teacherId")
 
-  // Fetch departments on page load
   useEffect(() => {
     const fetchDepartments = async () => {
       setIsLoading(true)
@@ -71,7 +68,6 @@ export default function AssignCoursePage() {
     }
   }
 
-  // Handle submit
   const handleSubmit = async () => {
     if (!selectedCourseId) {
       toast("Error \nPlease select a course to teach.")
