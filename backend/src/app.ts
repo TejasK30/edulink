@@ -12,6 +12,7 @@ import userRoutes from "./routes/userroutes"
 import announceMentRoutes from "./routes/announcementRoutes"
 import assignmentRoutes from "./routes/assignmentRoutes"
 import dashboardRoutes from "./routes/dashboardRoutes"
+import feedbackRoutes from "./routes/feedbackRoutes"
 
 const app = express()
 const PORT = process.env.PORT || 5000
@@ -23,6 +24,7 @@ app.use(
   })
 )
 app.use(express.json())
+connectDB()
 
 declare global {
   namespace Express {
@@ -75,8 +77,7 @@ app.use("/api/teacher/", teacherRoutes)
 app.use("/api/assignments/", assignmentRoutes)
 app.use("/api/student/", studentRoutes)
 app.use("/api/announcements", announceMentRoutes)
-
-connectDB()
+app.use("/api/feedback", feedbackRoutes)
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)

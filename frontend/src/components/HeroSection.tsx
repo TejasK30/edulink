@@ -20,7 +20,7 @@ const HeroSection = () => {
           />
           <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-8">
             Transform Your Institution with{" "}
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-primaryBlue to-brand-primaryPurple">
+            <span className="bg-clip-text text-violet-700 bg-gradient-to-r from-brand-primaryBlue to-brand-primaryPurple">
               Smart Education Management
             </span>
           </h1>
@@ -69,7 +69,7 @@ const HeroSection = () => {
         <div className="mt-20 relative">
           <div className="relative rounded-2xl overflow-hidden border border-primary/10 shadow-2xl">
             <Image
-              src="/dashboard1.png"
+              src="/dashboard.png"
               alt="Dashboard Preview"
               width={1920}
               height={1080}
