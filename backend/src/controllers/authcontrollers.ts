@@ -1,11 +1,11 @@
-import { Request, Response } from "express"
-import College, { ICollege } from "../models/College"
 import bcrypt from "bcryptjs"
-import { z } from "zod"
-import User, { UserRole } from "../models/user"
+import { Request, Response } from "express"
 import jwt from "jsonwebtoken"
-import Department, { IDepartment } from "../models/Department"
 import mongoose from "mongoose"
+import { z } from "zod"
+import College, { ICollege } from "../models/College"
+import Department, { IDepartment } from "../models/Department"
+import User from "../models/user"
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -404,9 +404,9 @@ export const getDepartmentsByCollege = async (
 }
 
 export {
-  registerAdminWithCollege,
   addCollege,
-  loginUser,
   getColleges,
+  loginUser,
   logoutUser,
+  registerAdminWithCollege,
 }

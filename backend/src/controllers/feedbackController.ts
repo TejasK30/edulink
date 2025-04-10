@@ -104,8 +104,6 @@ export const submitFeedback = async (
   }
 }
 
-// --- Keep other controller functions (getStudentFeedbacks, etc.) below if they are in the same file ---
-
 export const getStudentFeedbacks = async (
   req: Request,
   res: Response

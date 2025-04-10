@@ -231,14 +231,48 @@ export const getStudentAttendance = async (
 ): Promise<any> => {
   try {
     const { studentId } = req.params
+    const { courseId, startDate, endDate } = req.query
 
-    const attendanceRecords = await Attendance.find({
+    const filter: any = {
       studentId: new mongoose.Types.ObjectId(studentId),
-    })
+    }
+
+    if (courseId) {
+      filter.courseId = new mongoose.Types.ObjectId(courseId as string)
+    }
+
+    if (startDate && endDate) {
+      filter.date = {
+        $gte: new Date(startDate as string),
+        $lte: new Date(endDate as string),
+      }
+    }
+
+    const attendanceRecords = await Attendance.find(filter)
       .sort({ date: -1 })
       .populate("courseId", "name code")
+      .populate("teacherId", "name")
+      .lean()
 
-    return res.status(200).json(attendanceRecords)
+    const totalClasses = attendanceRecords.length
+    const presentClasses = attendanceRecords.filter(
+      (record) => record.status === "present"
+    ).length
+    const attendancePercentage =
+      totalClasses > 0 ? (presentClasses / totalClasses) * 100 : 0
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        records: attendanceRecords,
+        stats: {
+          totalClasses,
+          presentClasses,
+          absentClasses: totalClasses - presentClasses,
+          attendancePercentage: Math.round(attendancePercentage * 100) / 100,
+        },
+      },
+    })
   } catch (error: any) {
     console.error("Error fetching attendance:", error)
     return res.status(500).json({
