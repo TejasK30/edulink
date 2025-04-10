@@ -141,7 +141,7 @@ export default function FeedbackPage() {
         const response = await api.get(
           `/users?role=teacher&collegeId=${currentUser.collegeid}`
         )
-        setTeachers(response.data || [])
+        setTeachers(response.data.users || [])
       } catch (error: any) {
         console.error("Error fetching teachers:", error)
       } finally {
@@ -175,7 +175,6 @@ export default function FeedbackPage() {
     setSubmitMessage(null)
 
     const payload = {
-      studentId: currentUser._id,
       teacherId: selectedTeacherId || null,
       teacherFeedback: data.teacherFeedback,
       collegeFeedback: data.collegeFeedback,

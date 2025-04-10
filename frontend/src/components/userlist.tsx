@@ -313,7 +313,7 @@ const UserListPage: React.FC<UserListPageProps> = ({ role, users }) => {
             `/auth/colleges/${collegeid}/departments`
           )
           if (response.status === 200 && response.data) {
-            setDepartments(response.data)
+            setDepartments(response.data.data)
           } else {
             console.error("Failed to fetch departments for college:", collegeid)
             setDepartments([])

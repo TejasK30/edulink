@@ -110,7 +110,7 @@ export function StudentTeacherRegistrationForm({
             `auth/colleges/${collegeId}/departments`
           )
           if (response.status === 200 && response.data) {
-            setDepartments(response.data)
+            setDepartments(response.data.data)
           } else {
             console.error("Failed to fetch departments: Unexpected response")
             setDepartments([])

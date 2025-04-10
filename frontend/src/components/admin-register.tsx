@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
 import api from "@/lib/api"
 import { AdminRegisterData, useAuth } from "@/lib/auth-provider"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -302,7 +303,7 @@ export function AdminRegistrationForm({ onBack }: AdminRegistrationFormProps) {
                 <FormItem>
                   <FormLabel>Departments (comma-separated)</FormLabel>
                   <FormControl>
-                    <Input
+                    <Textarea
                       placeholder="Enter departments (e.g., Computer Science, Electrical Engineering)"
                       {...field}
                       value={field.value ?? ""}

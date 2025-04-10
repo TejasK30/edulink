@@ -33,6 +33,7 @@ import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useAppStore } from "@/lib/store"
+import Link from "next/link"
 
 interface StudentInfo {
   name: string
@@ -306,7 +307,14 @@ const StudentDashboard = () => {
                       {new Date(assignment.dueDate).toLocaleDateString()} at{" "}
                       {new Date(assignment.dueDate).toLocaleTimeString()}
                     </div>
-                    <Badge variant="secondary">View Details</Badge>
+                    <Link href={`/student/assignments/${assignment._id}`}>
+                      <Badge
+                        variant="secondary"
+                        className="bg-primary/70 hover:bg-primary"
+                      >
+                        View Details
+                      </Badge>
+                    </Link>
                   </CardFooter>
                 </Card>
               ))}

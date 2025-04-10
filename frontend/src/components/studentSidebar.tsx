@@ -8,6 +8,7 @@ import {
   Briefcase,
   CalendarCheck,
   GraduationCap,
+  MessageSquareQuote,
 } from "lucide-react"
 import React, { useEffect, useState } from "react"
 import { NavMain } from "./nav-main"
@@ -42,6 +43,11 @@ const StudentNavItems = [
     icon: GraduationCap,
   },
   {
+    title: "Feedback",
+    url: "/student/feedback",
+    icon: MessageSquareQuote,
+  },
+  {
     title: "Jobs",
     url: "/student/jobs",
     icon: Briefcase,
@@ -67,10 +73,7 @@ type StudentData = {
   }
 }
 
-export default function StudentSidebar({
-  studentId,
-  ...props
-}: StudentSidebarProps) {
+export default function StudentSidebar({ ...props }: StudentSidebarProps) {
   const { currentUser } = useAppStore()
 
   const [studentData, setStudentData] = useState<StudentData>({
