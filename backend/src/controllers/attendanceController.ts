@@ -2,6 +2,9 @@ import { Request, Response } from "express"
 import Course from "../models/Course"
 import Attendance from "../models/Attendance"
 import { Types } from "mongoose"
+import User from "../models/user"
+import { generateAttendanceEmailTemplate } from "../email/templates/attendance"
+import { queueBulkEmails } from "../email/services/emailQueue"
 
 export const getTeacherCourses = async (
   req: Request,
@@ -63,7 +66,6 @@ interface AttendanceRecordDTO {
   studentId: string
   status: "present" | "absent"
 }
-
 export const markAttendance = async (
   req: Request,
   res: Response
@@ -88,7 +90,6 @@ export const markAttendance = async (
     }
 
     const attendanceDate = new Date(date)
-
     const bulkOps = attendanceRecords.map((record: AttendanceRecordDTO) => ({
       updateOne: {
         filter: {
@@ -110,10 +111,76 @@ export const markAttendance = async (
     }))
 
     const result = await Attendance.bulkWrite(bulkOps)
-    res.status(200).json({ message: "Attendance marked successfully", result })
+
+    const course = await Course.findById(courseId).select("name")
+    if (!course) {
+      throw new Error("Course not found")
+    }
+
+    const studentIds = attendanceRecords.map((record) => record.studentId)
+    const students = await User.find({
+      _id: { $in: studentIds.map((id) => new Types.ObjectId(id)) },
+    }).select("email name")
+
+    const formattedDate = attendanceDate.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
+
+    const presentStudents: string[] = []
+    const absentStudents: string[] = []
+
+    attendanceRecords.forEach((record: AttendanceRecordDTO) => {
+      const student = students.find((s) => {
+        s._id === record.studentId
+      })
+      if (student && student.email) {
+        if (record.status === "present") {
+          presentStudents.push(student.email)
+        } else {
+          absentStudents.push(student.email)
+        }
+      }
+    })
+
+    if (presentStudents.length > 0) {
+      const presentTemplate = generateAttendanceEmailTemplate(
+        "Student",
+        course.name,
+        formattedDate,
+        "present"
+      )
+
+      await queueBulkEmails(
+        presentStudents,
+        `Attendance Update: ${course.name}`,
+        presentTemplate
+      )
+    }
+
+    if (absentStudents.length > 0) {
+      const absentTemplate = generateAttendanceEmailTemplate(
+        "Student",
+        course.name,
+        formattedDate,
+        "absent"
+      )
+
+      await queueBulkEmails(
+        absentStudents,
+        `Attendance Update: ${course.name}`,
+        absentTemplate
+      )
+    }
+
+    return res.status(200).json({
+      message: "Attendance marked successfully and notifications sent",
+      result,
+    })
   } catch (error: any) {
     console.error("Error marking attendance:", error)
-    res
+    return res
       .status(500)
       .json({ message: "Failed to mark attendance", error: error.message })
   }
