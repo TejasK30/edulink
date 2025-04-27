@@ -1,40 +1,80 @@
-import mongoose, { Schema, Document } from "mongoose"
+import mongoose, { Schema, Document, Types } from "mongoose"
 
-export interface IFee extends Document {
-  studentId: mongoose.Types.ObjectId
-  collegeId: mongoose.Types.ObjectId
-  semesterId: mongoose.Types.ObjectId
-  amountDue: number
-  amountPaid: number
-  paymentHistory: {
-    date: Date
-    amount: number
-    paymentMethod: string
-    receiptNumber?: string
-  }[]
+export enum FeeType {
+  TUITION = "tuition",
+  HOSTEL = "hostel",
+  EXAM = "exam",
 }
 
-const FeeSchema: Schema = new Schema(
+export enum FeeStatus {
+  PENDING = "pending",
+  PAID = "paid",
+  OVERDUE = "overdue",
+}
+
+export const FeeAmounts: Record<FeeType, number> = {
+  [FeeType.TUITION]: 50000,
+  [FeeType.HOSTEL]: 10000,
+  [FeeType.EXAM]: 2000,
+}
+
+export interface IFeeRecord extends Document {
+  studentId: Types.ObjectId
+  collegeId: Types.ObjectId
+  semesterId: Types.ObjectId
+  feeType: FeeType
+  amountDue: number
+  amountPaid: number
+  status: FeeStatus
+  dueDate: Date
+  paymentDate?: Date
+  paymentMethod?: string
+  transactionId?: string
+  receiptPdf?: Buffer
+  createdAt?: Date
+  updatedAt?: Date
+}
+
+const FeeRecordSchema: Schema = new Schema(
   {
-    studentId: { type: Schema.Types.ObjectId, ref: "Student", required: true },
-    collegeId: { type: Schema.Types.ObjectId, ref: "College", required: true },
-    semesterId: {
+    studentId: {
       type: Schema.Types.ObjectId,
-      ref: "Semester",
+      ref: "User",
       required: true,
+      index: true,
+    },
+    collegeId: {
+      type: Schema.Types.ObjectId,
+      ref: "College",
+      required: true,
+      index: true,
+    },
+    feeType: {
+      type: String,
+      enum: Object.values(FeeType),
+      required: true,
+      index: true,
     },
     amountDue: { type: Number, required: true },
     amountPaid: { type: Number, default: 0 },
-    paymentHistory: [
-      {
-        date: { type: Date, default: Date.now },
-        amount: { type: Number, required: true },
-        paymentMethod: { type: String, required: true },
-        receiptNumber: { type: String },
-      },
-    ],
+    status: {
+      type: String,
+      enum: Object.values(FeeStatus),
+      default: FeeStatus.PENDING,
+      index: true,
+    },
+    dueDate: { type: Date, required: true },
+    paymentDate: { type: Date },
+    paymentMethod: { type: String },
+    transactionId: { type: String, unique: true, sparse: true },
+    receiptPdf: { type: Buffer },
   },
   { timestamps: true }
 )
 
-export default mongoose.model<IFee>("Fee", FeeSchema)
+FeeRecordSchema.index(
+  { studentId: 1, semesterId: 1, feeType: 1 },
+  { unique: true }
+)
+
+export default mongoose.model<IFeeRecord>("FeeRecord", FeeRecordSchema)

@@ -61,6 +61,14 @@ const AdminNavItems = [
     items: [{ title: "Course List", url: "/admin/academics/course-list" }],
   },
   {
+    title: "Finances",
+    icon: DollarSign,
+    items: [
+      { title: "All Fees", url: "/admin/fees/all" },
+      { title: "Fee Reminders", url: "/admin/fees/reminders" },
+    ],
+  },
+  {
     title: "Setup",
     icon: Settings,
     items: [

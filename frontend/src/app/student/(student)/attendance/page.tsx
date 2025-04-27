@@ -1,6 +1,5 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -29,10 +28,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
-  Download,
   XCircle,
 } from "lucide-react"
-import { useParams } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 import {
   Bar,

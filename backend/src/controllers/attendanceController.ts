@@ -3,8 +3,8 @@ import Course from "../models/Course"
 import Attendance from "../models/Attendance"
 import { Types } from "mongoose"
 import User from "../models/user"
-import { generateAttendanceEmailTemplate } from "../email/templates/attendance"
-import { queueBulkEmails } from "../email/services/emailQueue"
+// import { generateAttendanceEmailTemplate } from "../email/templates/attendance"
+// import { queueBulkEmails } from "../email/services/emailQueue"
 
 export const getTeacherCourses = async (
   req: Request,
@@ -144,35 +144,35 @@ export const markAttendance = async (
       }
     })
 
-    if (presentStudents.length > 0) {
-      const presentTemplate = generateAttendanceEmailTemplate(
-        "Student",
-        course.name,
-        formattedDate,
-        "present"
-      )
+    // if (presentStudents.length > 0) {
+    //   const presentTemplate = generateAttendanceEmailTemplate(
+    //     "Student",
+    //     course.name,
+    //     formattedDate,
+    //     "present"
+    //   )
 
-      await queueBulkEmails(
-        presentStudents,
-        `Attendance Update: ${course.name}`,
-        presentTemplate
-      )
-    }
+    //   await queueBulkEmails(
+    //     presentStudents,
+    //     `Attendance Update: ${course.name}`,
+    //     presentTemplate
+    //   )
+    // }
 
-    if (absentStudents.length > 0) {
-      const absentTemplate = generateAttendanceEmailTemplate(
-        "Student",
-        course.name,
-        formattedDate,
-        "absent"
-      )
+    // if (absentStudents.length > 0) {
+    //   const absentTemplate = generateAttendanceEmailTemplate(
+    //     "Student",
+    //     course.name,
+    //     formattedDate,
+    //     "absent"
+    //   )
 
-      await queueBulkEmails(
-        absentStudents,
-        `Attendance Update: ${course.name}`,
-        absentTemplate
-      )
-    }
+    //   await queueBulkEmails(
+    //     absentStudents,
+    //     `Attendance Update: ${course.name}`,
+    //     absentTemplate
+    //   )
+    // }
 
     return res.status(200).json({
       message: "Attendance marked successfully and notifications sent",

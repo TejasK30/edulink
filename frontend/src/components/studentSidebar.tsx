@@ -7,6 +7,7 @@ import {
   Book,
   Briefcase,
   CalendarCheck,
+  CreditCard,
   GraduationCap,
   MessageSquareQuote,
 } from "lucide-react"
@@ -41,6 +42,14 @@ const StudentNavItems = [
     title: "Courses",
     url: "/student/courses",
     icon: GraduationCap,
+  },
+  {
+    title: "Fees",
+    icon: CreditCard,
+    items: [
+      { title: "Fee History", url: "/student/fees/history" },
+      { title: "Make Payment", url: "/student/fees/payment" },
+    ],
   },
   {
     title: "Feedback",
