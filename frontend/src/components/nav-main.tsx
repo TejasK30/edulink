@@ -67,7 +67,7 @@ export function NavMain({ items }: NavMainProps) {
                       tooltip={item.title}
                       className={cn(
                         "flex items-center transition-colors",
-                        active ? "dark:bg-blue-500 bg-primary-purple-200" : ""
+                        active ? "bg-blue-500 bg-primary-purple-200" : ""
                       )}
                       onClick={(e) => {
                         if (active) {

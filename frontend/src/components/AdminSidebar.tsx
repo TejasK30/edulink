@@ -63,10 +63,7 @@ const AdminNavItems = [
   {
     title: "Finances",
     icon: DollarSign,
-    items: [
-      { title: "All Fees", url: "/admin/fees/all" },
-      { title: "Fee Reminders", url: "/admin/fees/reminders" },
-    ],
+    items: [{ title: "All Fees", url: "/admin/finances" }],
   },
   {
     title: "Setup",
