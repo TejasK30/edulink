@@ -13,6 +13,7 @@ import announceMentRoutes from "./routes/announcementRoutes"
 import assignmentRoutes from "./routes/assignmentRoutes"
 import dashboardRoutes from "./routes/dashboardRoutes"
 import feedbackRoutes from "./routes/feedbackRoutes"
+import feeRoutes from "./routes/feeRoutes"
 
 const app = express()
 const PORT = process.env.PORT || 5000
@@ -78,6 +79,7 @@ app.use("/api/assignments/", assignmentRoutes)
 app.use("/api/student/", studentRoutes)
 app.use("/api/announcements", announceMentRoutes)
 app.use("/api/feedback", feedbackRoutes)
+app.use("/api/fee", feeRoutes)
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)

@@ -1,91 +1,76 @@
 import nodemailer from "nodemailer"
-import logger from "../utils/logger"
-import { IFeeRecord } from "../models/Fee"
+import fs from "fs"
 import { UserModel } from "../models/user"
+import { IFeePayment } from "../models/FeePayment"
+import { getReceiptPath } from "utils/pdfGenerator"
 
+// Configure nodemailer transporter
 const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST,
-  port: parseInt(process.env.EMAIL_PORT || "587", 10),
-  secure: process.env.EMAIL_SECURE === "true",
+  host: process.env.SMTP_HOST || "smtp.gmail.com",
+  port: parseInt(process.env.SMTP_PORT || "587"),
+  secure: process.env.SMTP_SECURE === "true",
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  tls: {
-    rejectUnauthorized: process.env.NODE_ENV === "production",
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASSWORD,
   },
 })
 
-interface EmailOptions {
-  to: string
-  subject: string
-  text: string
-  html: string
-}
-
-export const sendEmail = async (options: EmailOptions): Promise<void> => {
+export const sendReceiptEmail = async (
+  student: UserModel,
+  payment: IFeePayment,
+  receiptFilename: string
+): Promise<boolean> => {
   try {
-    const info = await transporter.sendMail({
-      from: process.env.EMAIL_FROM,
-      to: options.to,
-      subject: options.subject,
-      text: options.text,
-      html: options.html,
-    })
-    logger.info(`Email sent successfully to ${options.to}: ${info.messageId}`)
+    const receiptPath = getReceiptPath(receiptFilename)
+
+    if (!fs.existsSync(receiptPath)) {
+      throw new Error("Receipt file not found")
+    }
+
+    const mailOptions = {
+      from: process.env.EMAIL_FROM || "college@example.com",
+      to: student.email,
+      subject: "Fee Payment Receipt",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2>Payment Receipt</h2>
+          <p>Dear ${student.name},</p>
+          <p>Thank you for your payment. Your transaction ID is: <strong>${
+            payment.transactionId
+          }</strong>.</p>
+          <p>We have attached your receipt to this email.</p>
+          <p>Payment Details:</p>
+          <ul>
+            ${payment.feeDetails
+              .map(
+                (detail) => `
+              <li>${
+                detail.feeType.charAt(0).toUpperCase() + detail.feeType.slice(1)
+              } Fee: ₹${detail.amount.toLocaleString("en-IN")}</li>
+            `
+              )
+              .join("")}
+          </ul>
+          <p>Total Amount Paid: ₹${payment.amountPaid.toLocaleString(
+            "en-IN"
+          )}</p>
+          <p>If you have any questions, please contact the accounts department.</p>
+          <p>Regards,<br>College Management System</p>
+        </div>
+      `,
+      attachments: [
+        {
+          filename: `Payment_Receipt_${payment.transactionId}.pdf`,
+          path: receiptPath,
+          contentType: "application/pdf",
+        },
+      ],
+    }
+
+    await transporter.sendMail(mailOptions)
+    return true
   } catch (error) {
-    logger.error(`Error sending email to ${options.to}:`, error)
-    throw new Error("Failed to send email")
+    console.error("Failed to send receipt email:", error)
+    return false
   }
-}
-
-export const sendPaymentConfirmationEmail = async (
-  student: UserModel,
-  feeRecord: IFeeRecord
-) => {
-  const subject = `Payment Confirmation for ${feeRecord.feeType} Fee`
-  const text = `Dear ${student.name},\n\nYour payment of INR ${
-    feeRecord.amountPaid
-  } for the ${feeRecord.feeType} fee (Semester ${
-    feeRecord.semesterId
-  }) has been successfully processed on ${feeRecord.paymentDate?.toLocaleDateString()}.\n\nTransaction ID: ${
-    feeRecord.transactionId
-  }\n\nThank you,\nCollege Administration`
-  const html = `<p>Dear ${student.name},</p>
-              <p>Your payment of <strong>INR ${
-                feeRecord.amountPaid
-              }</strong> for the <strong>${
-    feeRecord.feeType
-  }</strong> fee (Semester ${
-    feeRecord.semesterId
-  }) has been successfully processed on ${feeRecord.paymentDate?.toLocaleDateString()}.</p>
-              <p>Transaction ID: ${feeRecord.transactionId}</p>
-              <p>You can download your receipt from the student portal.</p>
-              <p>Thank you,<br/>College Administration</p>`
-
-  await sendEmail({ to: student.email, subject, text, html })
-}
-
-export const sendPaymentReminderEmail = async (
-  student: UserModel,
-  feeRecord: IFeeRecord
-) => {
-  const subject = `Fee Payment Reminder: ${feeRecord.feeType} Fee Due`
-  const text = `Dear ${student.name},\n\nThis is a reminder that your ${
-    feeRecord.feeType
-  } fee payment of INR ${
-    feeRecord.amountDue
-  } is due on ${feeRecord.dueDate.toLocaleDateString()}.\n\nPlease make the payment at your earliest convenience through the student portal.\n\nThank you,\nCollege Administration`
-  const html = `<p>Dear ${student.name},</p>
-              <p>This is a reminder that your <strong>${
-                feeRecord.feeType
-              }</strong> fee payment of <strong>INR ${
-    feeRecord.amountDue
-  }</strong> is due on <strong>${feeRecord.dueDate.toLocaleDateString()}</strong>.</p>
-              <p>Please make the payment at your earliest convenience through the student portal: <a href="${
-                process.env.CLIENT_URL
-              }/dashboard/fees">Pay Now</a></p>
-              <p>Thank you,<br/>College Administration</p>`
-
-  await sendEmail({ to: student.email, subject, text, html })
 }
