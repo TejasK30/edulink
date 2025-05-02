@@ -38,14 +38,12 @@ export default function StudentAssignmentListPage() {
 
   const { currentUser } = useAppStore()
 
-  // Fetch enrolled courses
   useEffect(() => {
     const fetchEnrolledCourses = async () => {
       try {
         const response = await api.get(
           `/student/${currentUser?._id}/enrolled-courses`
         )
-        // Extract the courses array from response.data.courses
         if (response.data && Array.isArray(response.data.courses)) {
           setEnrolledCourses(response.data.courses as Course[])
         } else {
@@ -54,12 +52,12 @@ export default function StudentAssignmentListPage() {
             response.data
           )
           toast("Failed to load enrolled courses. Please try again.")
-          setEnrolledCourses([]) // Set to empty array to avoid errors
+          setEnrolledCourses([])
         }
       } catch (error: any) {
         console.error("Error fetching enrolled courses:", error)
         toast("Failed to load enrolled courses. Please try again.")
-        setEnrolledCourses([]) // Set to empty array on error
+        setEnrolledCourses([])
       } finally {
         setLoadingCourses(false)
       }
@@ -69,13 +67,11 @@ export default function StudentAssignmentListPage() {
     }
   }, [currentUser?._id])
 
-  // Fetch assignments for selected course
   useEffect(() => {
     const fetchAssignments = async () => {
       if (!selectedCourse) return
       setLoadingAssignments(true)
       try {
-        // Updated endpoint using route parameter
         console.log(selectedCourse)
         const response = await api.get(`/assignments/course/${selectedCourse}`)
         console.log(response.data)
@@ -87,12 +83,12 @@ export default function StudentAssignmentListPage() {
             response.data
           )
           toast("Failed to load assignments. Please try again.")
-          setAssignments([]) // Set to empty array to avoid errors
+          setAssignments([])
         }
       } catch (error: any) {
         console.error("Error fetching assignments:", error)
         toast("Failed to load assignments. Please try again.")
-        setAssignments([]) // Set to empty array on error
+        setAssignments([])
       } finally {
         setLoadingAssignments(false)
       }
@@ -104,7 +100,6 @@ export default function StudentAssignmentListPage() {
     <div className="container mx-auto p-6">
       <h1 className="text-2xl font-bold mb-4">My Assignments</h1>
 
-      {/* Course Dropdown using ShadCN UI components */}
       <div className="mb-6">
         <label className="block text-sm font-medium mb-2">Select Course</label>
         <Select value={selectedCourse} onValueChange={setSelectedCourse}>
@@ -131,7 +126,6 @@ export default function StudentAssignmentListPage() {
         </Select>
       </div>
 
-      {/* Assignments List */}
       {loadingAssignments ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {Array.from({ length: 3 }).map((_, i) => (

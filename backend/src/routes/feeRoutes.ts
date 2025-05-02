@@ -3,12 +3,12 @@ import * as feeController from "../controllers/feeController"
 
 const router = Router()
 
-// Fee information routes
+// generaal fee info routes
 router.get("/types", feeController.getFeeTypes)
 router.get("/installment-options", feeController.getInstallmentOptions)
 router.get("/payment-methods", feeController.getPaymentMethods)
 
-// Student payment flow routes
+// Student payment routes
 router.post("/payment/initiate/:userId", feeController.initiatePayment)
 router.post("/payment/process/:paymentId", feeController.processPayment)
 router.post("/payment/verify-otp/:paymentId", feeController.verifyOTP)

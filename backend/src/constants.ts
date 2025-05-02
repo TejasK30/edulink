@@ -11,16 +11,14 @@ export const INSTALLMENT_OPTIONS = [
   { value: 4, label: "4 Installments (Quarterly)" },
 ]
 
-export const INSTALLMENT_SURCHARGE_PERCENTAGE = 5 // 5% surcharge for installment payments
+export const INSTALLMENT_SURCHARGE_PERCENTAGE = 5
 
 export const CURRENCY = "INR"
 
-// Payment processing constants
-export const SIMULATED_PAYMENT_DELAY = 2000 // 2 seconds
-export const OTP_VALIDATION_DELAY = 1000 // 1 second
-export const OTP_EXPIRY_TIME = 5 * 60 * 1000 // 5 minutes in milliseconds
+export const SIMULATED_PAYMENT_DELAY = 2000
+export const OTP_VALIDATION_DELAY = 1000
+export const OTP_EXPIRY_TIME = 5 * 60 * 1000
 
-// Banking options for net banking
 export const BANK_OPTIONS = [
   { code: "SBI", name: "State Bank of India" },
   { code: "HDFC", name: "HDFC Bank" },
@@ -34,7 +32,6 @@ export const BANK_OPTIONS = [
   { code: "YES", name: "Yes Bank" },
 ]
 
-// Wallet options
 export const WALLET_OPTIONS = [
   { code: "PAYTM", name: "Paytm" },
   { code: "PHONEPE", name: "PhonePe" },
@@ -43,5 +40,4 @@ export const WALLET_OPTIONS = [
   { code: "FREECHARGE", name: "Freecharge" },
 ]
 
-// Receipt settings
-export const RECEIPT_VALIDITY_DAYS = 180 // 6 months
+export const RECEIPT_VALIDITY_DAYS = 180

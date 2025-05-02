@@ -8,6 +8,7 @@ import {
   deleteUser,
   getAdmins,
   getAllUsers,
+  getDetailedUserByRole,
   getJobsByCollegeAdmin,
   getSemestersByCollege,
   getStudents,
@@ -34,5 +35,6 @@ router.post("/semesters/:collegId", createSemester)
 router.patch("/semesters/:id", toggleSemesterStatus)
 router.get("/colleges/:collegeId/semesters", getSemestersByCollege)
 router.get("/jobs/:collegeId", getJobsByCollegeAdmin)
+router.get("/users/:role/:id", getDetailedUserByRole)
 
 export default router

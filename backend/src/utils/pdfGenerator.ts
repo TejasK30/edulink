@@ -6,7 +6,6 @@ import { UserModel } from "../models/user"
 import { formatCurrency, maskCardNumber } from "../helpers"
 import { RECEIPT_VALIDITY_DAYS } from "../constants"
 
-// Ensure uploads directory exists
 const RECEIPT_DIR = path.join(process.cwd(), "uploads", "receipts")
 if (!fs.existsSync(RECEIPT_DIR)) {
   fs.mkdirSync(RECEIPT_DIR, { recursive: true })
@@ -16,12 +15,10 @@ export const generateReceipt = async (
   payment: IFeePayment,
   student: UserModel
 ): Promise<string> => {
-  // Create filename with timestamp to avoid duplicates
   const timestamp = new Date().getTime()
   const filename = `receipt_${payment._id}_${timestamp}.pdf`
   const filePath = path.join(RECEIPT_DIR, filename)
 
-  // Create a PDF document
   const doc = new PDFDocument({
     margin: 50,
     size: "A4",
@@ -36,39 +33,31 @@ export const generateReceipt = async (
   const stream = fs.createWriteStream(filePath)
 
   return new Promise((resolve, reject) => {
-    // Pipe the PDF to the file
     doc.pipe(stream)
 
-    // Set some default properties
     doc.font("Helvetica")
 
-    // Calculate receipt validity date
     const validUntil = new Date(payment.paymentDate)
     validUntil.setDate(validUntil.getDate() + RECEIPT_VALIDITY_DAYS)
 
-    // Add university logo (placeholder - in a real app, you'd use an actual logo file)
     doc
       .fontSize(24)
       .text("EduLink University", { align: "center" })
       .moveDown(0.2)
 
-    // Add a decorative line
     doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke("#3778C2").moveDown(0.5)
 
-    // Header
     doc
       .fontSize(16)
       .fillColor("#333333")
       .text("OFFICIAL FEE RECEIPT", { align: "center" })
       .moveDown(0.5)
 
-    // Receipt details box with light blue background
     doc
       .rect(50, doc.y, 500, 130)
       .fillAndStroke("#F5FAFF", "#3778C2")
       .moveDown(0.5)
 
-    // Receipt information
     const receiptY = doc.y - 120
     doc
       .fillColor("#333333")
@@ -98,7 +87,6 @@ export const generateReceipt = async (
       .text(`Student Name: ${student.name}`, 300, receiptY + 20)
       .text(`Email: ${student.email}`, 300, receiptY + 40)
 
-    // For installment payments, add installment info
     if (
       payment.isInstallment &&
       payment.installmentNumber &&
@@ -123,14 +111,12 @@ export const generateReceipt = async (
 
     doc.moveDown(7)
 
-    // Add a section title for fee details
     doc
       .fontSize(12)
       .fillColor("#3778C2")
       .text("FEE DETAILS", { align: "left", underline: true })
       .moveDown(0.5)
 
-    // Fee details table with improved styling
     const tableTop = doc.y
     const tableHeaders = [
       { x: 70, width: 200, label: "Fee Type" },
@@ -138,10 +124,8 @@ export const generateReceipt = async (
       { x: 370, width: 130, label: "Description" },
     ]
 
-    // Draw table headers with blue background
     doc.rect(50, tableTop - 5, 500, 20).fill("#3778C2")
 
-    // Add white text for headers
     doc.fillColor("#FFFFFF")
     tableHeaders.forEach((header) => {
       doc.text(header.label, header.x, tableTop, {
@@ -152,19 +136,15 @@ export const generateReceipt = async (
 
     doc.moveDown()
 
-    // Reset fill color to black for table content
     doc.fillColor("#333333")
 
-    // Draw alternating row backgrounds
     let tableY = doc.y
     const rowHeight = 25
     payment.feeDetails.forEach((detail, i) => {
-      // Draw alternating background for rows
       if (i % 2 === 0) {
         doc.rect(50, tableY - 5, 500, rowHeight).fill("#F5F5F5")
       }
 
-      // Add fee details text
       doc
         .fillColor("#333333")
         .text(
@@ -183,10 +163,8 @@ export const generateReceipt = async (
       tableY += rowHeight
     })
 
-    // Add a border around the table
     doc.rect(50, tableTop - 5, 500, tableY - tableTop + 10).stroke("#CCCCCC")
 
-    // Total section with highlight
     doc.rect(50, tableY + 5, 500, 30).fillAndStroke("#3778C2", "#3778C2")
 
     doc
@@ -204,7 +182,6 @@ export const generateReceipt = async (
 
     doc.moveDown(3)
 
-    // Add payment information section
     if (payment.paymentMethod) {
       doc
         .fillColor("#3778C2")
@@ -225,7 +202,6 @@ export const generateReceipt = async (
         .moveDown(2)
     }
 
-    // Footer with disclaimer
     doc
       .fillColor("#666666")
       .fontSize(9)
@@ -244,13 +220,11 @@ export const generateReceipt = async (
         { align: "center" }
       )
 
-    // Add a QR code placeholder (in a real app, you'd generate an actual QR code)
     doc.rect(450, 700, 80, 80).stroke()
     doc
       .fontSize(8)
       .text("Scan to verify", 450, 785, { width: 80, align: "center" })
 
-    // Finalize the PDF
     doc.end()
 
     stream.on("finish", () => {
@@ -267,7 +241,6 @@ export const getReceiptPath = (filename: string): string => {
   return path.join(RECEIPT_DIR, filename)
 }
 
-// Helper function to format payment method
 const formatPaymentMethod = (payment: IFeePayment): string => {
   if (!payment.paymentMethod) return "Unknown"
 
@@ -285,7 +258,6 @@ const formatPaymentMethod = (payment: IFeePayment): string => {
   }
 }
 
-// Helper function to get fee description
 const getFeeDescription = (feeType: string): string => {
   switch (feeType) {
     case "tuition":
@@ -299,12 +271,10 @@ const getFeeDescription = (feeType: string): string => {
   }
 }
 
-// Helper function to format time
 const formatTime = (date: Date): string => {
   return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
 }
 
-// Helper function to capitalize first letter
 const capitalizeFirstLetter = (text: string): string => {
   return text.charAt(0).toUpperCase() + text.slice(1)
 }

@@ -5,7 +5,6 @@ import { UserModel } from "../models/user"
 import { IFeePayment } from "../models/FeePayment"
 import { getReceiptPath } from "./pdfGenerator"
 
-// Create a transporter using environment variables
 const createTransporter = () => {
   return nodemailer.createTransport({
     host: process.env.SMTP_HOST || "smtp.gmail.com",
@@ -27,7 +26,6 @@ export const sendFeeReceipt = async (
     const transporter = createTransporter()
     const receiptPath = getReceiptPath(receiptFilename)
 
-    // Send email with receipt
     const info = await transporter.sendMail({
       from: `"EduLink University" <${process.env.SMTP_USER}>`,
       to: user.email,

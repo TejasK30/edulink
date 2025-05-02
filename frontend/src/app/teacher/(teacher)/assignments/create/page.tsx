@@ -30,10 +30,9 @@ export default function CreateAssignmentPage() {
   const [title, setTitle] = useState("")
   const [assignmentName, setAssignmentName] = useState("")
   const [questions, setQuestions] = useState<string[]>(Array(6).fill(""))
-  const [dueDate, setDueDate] = useState<string>("") // ISO date string
+  const [dueDate, setDueDate] = useState<string>("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Fetch teacher courses only if currentUser and teacherId are available
   useEffect(() => {
     if (!currentUser || !currentUser._id) return
     const teacherId = currentUser._id
@@ -76,7 +75,7 @@ export default function CreateAssignmentPage() {
         title,
         name: assignmentName,
         questions,
-        dueDate, // should be an ISO string
+        dueDate,
       }
       const teacherId = currentUser._id
       const response = await api.post(

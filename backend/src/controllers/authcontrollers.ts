@@ -333,7 +333,6 @@ const loginUser = async (req: Request, res: Response): Promise<any> => {
       maxAge: 24 * 60 * 60 * 1000,
     })
 
-    // Standardize user data for all roles
     const userData = {
       _id: user._id,
       name: user.name,

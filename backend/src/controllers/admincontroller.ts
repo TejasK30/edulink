@@ -1,4 +1,4 @@
-import { Request, Response } from "express"
+import { NextFunction, Request, Response } from "express"
 import { z } from "zod"
 import Announcement from "../models/Announcement"
 import Course from "../models/Course"
@@ -9,6 +9,9 @@ import College from "../models/College"
 import mongoose from "mongoose"
 import Semester, { ISemester } from "../models/Semester"
 import { Types } from "mongoose"
+import Attendance from "../models/Attendance"
+import Grade from "../models/Grade"
+import Feedback from "../models/feedback"
 
 const updateUserSchema = z.object({
   name: z.string().min(2).optional(),
@@ -495,5 +498,123 @@ export const getJobsByCollegeAdmin = async (
     res.status(200).json(jobs)
   } catch (error) {
     res.status(500).json({ message: "Server error" })
+  }
+}
+
+const ALLOWED_ROLES = ["admin", "teacher", "student"] as const
+type Role = (typeof ALLOWED_ROLES)[number]
+export const getDetailedUserByRole = async (
+  req: Request<{ role: string; id: string }>,
+  res: Response
+): Promise<any> => {
+  const { role, id } = req.params
+
+  if (!ALLOWED_ROLES.includes(role as Role)) {
+    return res.status(400).json({ error: `'${role}' is not valid.` })
+  }
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ error: `'${id}' is not a valid ID.` })
+  }
+
+  try {
+    const user = await User.findById(id)
+      .select("name email role departmentId createdAt updatedAt")
+      .lean()
+    if (!user) {
+      return res.status(404).json({ error: `No ${role} found.` })
+    }
+
+    let department: { _id: string; name: string } | undefined
+    if (user.department) {
+      const dept = await Department.findById(user.department)
+        .select("name")
+        .lean()
+      if (dept) {
+        department = { _id: dept._id.toString(), name: dept.name }
+      }
+    }
+
+    const payload: any = {
+      _id: user._id.toString(),
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+      department,
+    }
+
+    if (role === "student") {
+      const enrolledCourses = await Course.find({
+        enrolledStudents: id,
+      })
+        .select("name code credits")
+        .lean()
+      payload.enrolledCourses = enrolledCourses.map((c) => ({
+        _id: c._id.toString(),
+        name: c.name,
+        code: c.code,
+        credits: c.credits,
+      }))
+
+      const attendance = await Attendance.find({ studentId: id })
+        .populate("courseId", "name code")
+        .lean()
+      payload.attendance = attendance.map((a) => ({
+        _id: a._id.toString(),
+        courseId: {
+          _id: (a.courseId as any)._id.toString(),
+          name: (a.courseId as any).name,
+          code: (a.courseId as any).code,
+        },
+        date: a.date.toISOString(),
+        status: a.status,
+      }))
+
+      const grades = await Grade.find({ studentId: id })
+        .populate("courseId", "name code")
+        .lean()
+      payload.grades = grades.map((g) => ({
+        _id: g._id.toString(),
+        courseId: {
+          _id: (g.courseId as any)._id.toString(),
+          name: (g.courseId as any).name,
+          code: (g.courseId as any).code,
+        },
+        gradeValue: g.gradeValue,
+        gradeType: g.gradeType,
+        updatedAt: g.updatedAt.toISOString(),
+      }))
+    }
+
+    if (role === "teacher") {
+      const teachingCourses = await Course.find({ teacherId: id })
+        .select("name code credits enrolledStudents")
+        .lean()
+      payload.teachingCourses = teachingCourses.map((c) => ({
+        _id: c._id.toString(),
+        name: c.name,
+        code: c.code,
+        credits: c.credits,
+        enrolledStudents: Array.isArray(c.enrolledStudents)
+          ? c.enrolledStudents.length
+          : 0,
+      }))
+
+      const feedbacks = await Feedback.find({ teacherId: id })
+        .select("rating message createdAt")
+        .lean()
+      payload.feedbacks = feedbacks.map((f) => ({
+        _id: f._id.toString(),
+        rating: f.rating,
+        message: f.message,
+        createdAt: f.createdAt.toISOString(),
+      }))
+    }
+
+    return res.status(200).json(payload)
+  } catch (err) {
+    console.error("getUserByRole error:", err)
+    return res.status(500).json({ error: "Server error fetching user." })
   }
 }

@@ -51,7 +51,6 @@ const ChatbotButton: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [isPulsing, setIsPulsing] = useState(false)
 
-  // Specify the type for the refs
   const inputRef = useRef<HTMLInputElement>(null)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
   const chatContainerRef = useRef<HTMLDivElement>(null)

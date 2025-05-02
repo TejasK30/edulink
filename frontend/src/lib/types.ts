@@ -463,3 +463,41 @@ export interface AllPaymentsResponse {
   page?: number
   limit?: number
 }
+
+export type UserProfileExtended = User & {
+  department?: { _id: string; name: string }
+  enrolledCourses?: Array<{
+    _id: string
+    name: string
+    code: string
+    credits: number
+  }>
+  attendance?: Array<{
+    _id: string
+    courseId: { _id: string; name: string; code: string }
+    date: string
+    status: "present" | "absent"
+  }>
+  grades?: Array<{
+    _id: string
+    courseId: { _id: string; name: string; code: string }
+    gradeValue: number
+    gradeType: "assignment" | "exam"
+    updatedAt: string
+  }>
+  teachingCourses?: Array<{
+    _id: string
+    name: string
+    code: string
+    credits: number
+    enrolledStudents: number
+  }>
+  feedbacks?: Array<{
+    _id: string
+    rating: number
+    message: string
+    createdAt: string
+  }>
+  createdAt?: string
+  updatedAt?: string
+}

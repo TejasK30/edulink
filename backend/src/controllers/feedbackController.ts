@@ -1,6 +1,6 @@
 import { Request, Response } from "express"
 import mongoose from "mongoose"
-import Feedback from "../models/feedback"
+import Feedback, { FeedbackType } from "../models/feedback"
 import User, { UserRole } from "../models/user"
 
 const FEEDBACK_TYPE_TEACHER = "teacher"
@@ -241,112 +241,122 @@ export const getTeacherFeedbacks = async (
   }
 }
 
-export const getCollegeFeedbacks = async (
+interface FeedbackAnalytics {
+  totalFeedbacks: number
+  averageOverallRating: number
+  feedbackTypeBreakdown: Array<{
+    _id: FeedbackType
+    count: number
+    averageRating: number
+  }>
+  averageTeacherRating?: number
+  averageCollegeRating?: number
+}
+
+export const getCollegeFeedbackAnalytics = async (
   req: Request,
   res: Response
 ): Promise<any> => {
+  const { userid } = req.params
+  console.log(userid)
+
+  if (!mongoose.Types.ObjectId.isValid(userid)) {
+    return res.status(400).json({ message: "Invalid user ID format." })
+  }
+
   try {
-    const feedbacks = await Feedback.find({
-      feedbackType: FEEDBACK_TYPE_COLLEGE,
-    })
-      .sort({ createdAt: -1 })
-      .populate("studentId", "name")
-      .lean()
-
-    const totalFeedbacks = feedbacks.length
-
-    const overallAvgRating =
-      totalFeedbacks > 0
-        ? feedbacks.reduce((sum, feedback) => sum + feedback.rating, 0) /
-          totalFeedbacks
-        : 0
-
-    const categorySums = {
-      facilities: 0,
-      campusLife: 0,
-      administration: 0,
-      academicEnvironment: 0,
+    const adminUser = await User.findById(userid).select("+role college")
+    if (!adminUser) {
+      return res.status(404).json({ message: "Admin user not found." })
     }
-    let validFeedbacksForStats = 0
+    const adminCollegeId = adminUser.college
 
-    feedbacks.forEach((feedback) => {
-      try {
-        const parsedMessage = JSON.parse(feedback.message || "{}")
-        if (typeof parsedMessage === "object" && parsedMessage !== null) {
-          categorySums.facilities += Number(parsedMessage.facilities) || 0
-          categorySums.campusLife += Number(parsedMessage.campusLife) || 0
-          categorySums.administration +=
-            Number(parsedMessage.administration) || 0
-          categorySums.academicEnvironment +=
-            Number(parsedMessage.academicEnvironment) || 0
-          validFeedbacksForStats++
-        } else {
-          console.warn(
-            `Parsed message for feedback ID ${feedback._id} is not an object.`
-          )
-        }
-      } catch (parseError) {
-        console.error(
-          `Error parsing college feedback message for ID ${feedback._id}:`,
-          parseError
-        )
-      }
-    })
-
-    const statsCount = validFeedbacksForStats || 1
-
-    const categoryAverages = {
-      facilities: parseFloat((categorySums.facilities / statsCount).toFixed(1)),
-      campusLife: parseFloat((categorySums.campusLife / statsCount).toFixed(1)),
-      administration: parseFloat(
-        (categorySums.administration / statsCount).toFixed(1)
-      ),
-      academicEnvironment: parseFloat(
-        (categorySums.academicEnvironment / statsCount).toFixed(1)
-      ),
-      overall: parseFloat(overallAvgRating.toFixed(1)),
-    }
-
-    const recentFeedbacks = feedbacks.slice(0, 10).map((feedback) => {
-      try {
-        const parsedMessage = JSON.parse(feedback.message || "{}")
-        return {
-          id: feedback._id,
-          studentId: feedback.studentId,
-          rating: feedback.rating,
-          details: parsedMessage,
-          createdAt: feedback.createdAt,
-          updatedAt: feedback.updatedAt,
-        }
-      } catch (parseError) {
-        console.error(
-          `Error parsing recent college feedback message for ID ${feedback._id}:`,
-          parseError
-        )
-        return {
-          id: feedback._id,
-          studentId: feedback.studentId,
-          rating: feedback.rating,
-          details: {
-            error: "Failed to parse feedback details",
-            raw: feedback.message,
+    const analyticsResult = await Feedback.aggregate<FeedbackAnalytics>([
+      {
+        $lookup: {
+          from: "users",
+          localField: "studentId",
+          foreignField: "_id",
+          as: "studentInfo",
+        },
+      },
+      {
+        $unwind: "$studentInfo",
+      },
+      {
+        $match: {
+          "studentInfo.college": adminCollegeId,
+        },
+      },
+      {
+        $facet: {
+          overallAnalytics: [
+            {
+              $group: {
+                _id: null,
+                totalFeedbacks: { $sum: 1 },
+                averageOverallRating: { $avg: "$rating" },
+              },
+            },
+            {
+              $project: {
+                _id: 0,
+                totalFeedbacks: 1,
+                averageOverallRating: { $round: ["$averageOverallRating", 2] },
+              },
+            },
+          ],
+          feedbackTypeBreakdown: [
+            {
+              $group: {
+                _id: "$feedbackType",
+                count: { $sum: 1 },
+                averageRating: { $avg: "$rating" },
+              },
+            },
+            {
+              $project: {
+                _id: 1,
+                count: 1,
+                averageRating: { $round: ["$averageRating", 2] },
+              },
+            },
+            {
+              $sort: { _id: 1 },
+            },
+          ],
+        },
+      },
+      {
+        $project: {
+          totalFeedbacks: {
+            $arrayElemAt: ["$overallAnalytics.totalFeedbacks", 0],
           },
-          createdAt: feedback.createdAt,
-          updatedAt: feedback.updatedAt,
-        }
+          averageOverallRating: {
+            $arrayElemAt: ["$overallAnalytics.averageOverallRating", 0],
+          },
+          feedbackTypeBreakdown: "$feedbackTypeBreakdown",
+        },
+      },
+    ])
+
+    const analytics: FeedbackAnalytics = {
+      totalFeedbacks: analyticsResult[0]?.totalFeedbacks || 0,
+      averageOverallRating: analyticsResult[0]?.averageOverallRating || 0,
+      feedbackTypeBreakdown: analyticsResult[0]?.feedbackTypeBreakdown || [],
+    }
+
+    analytics.feedbackTypeBreakdown.forEach((item) => {
+      if (item._id === FeedbackType.TEACHER) {
+        analytics.averageTeacherRating = item.averageRating
+      } else if (item._id === FeedbackType.COLLEGE) {
+        analytics.averageCollegeRating = item.averageRating
       }
     })
 
-    return res.status(200).json({
-      totalFeedbacks: totalFeedbacks,
-      averageRating: parseFloat(overallAvgRating.toFixed(1)),
-      categoryAverages: categoryAverages,
-      recentFeedbacks: recentFeedbacks,
-    })
-  } catch (err: any) {
-    console.error("Error fetching college feedbacks:", err)
-    return res
-      .status(500)
-      .json({ error: "Error fetching college feedbacks", details: err.message })
+    res.status(200).json(analytics)
+  } catch (error) {
+    console.error("Error fetching feedback analytics:", error)
+    res.status(500).json({ message: "Failed to fetch feedback analytics." })
   }
 }

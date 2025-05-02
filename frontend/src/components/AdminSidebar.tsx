@@ -66,6 +66,11 @@ const AdminNavItems = [
     items: [{ title: "All Fees", url: "/admin/finances" }],
   },
   {
+    title: "Feedback",
+    icon: AlertCircle,
+    items: [{ title: "Feedback Analytics", url: "/admin/feedback-analytics" }],
+  },
+  {
     title: "Setup",
     icon: Settings,
     items: [

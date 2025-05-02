@@ -1,7 +1,6 @@
 import api from "@/lib/api"
 import { AxiosError } from "axios"
 
-// Define Fee and FeePaymentData interfaces if they don't exist in types folder
 export interface Fee {
   _id: string
   name: string
@@ -113,7 +112,6 @@ export async function getAllFees(
     limit: limit.toString(),
   }
 
-  // Add only defined filter values
   Object.entries(filters).forEach(([key, value]) => {
     if (value !== undefined) {
       params[key] = value
@@ -149,7 +147,6 @@ export async function getFeeSummary(collegeId: string) {
 export async function getUnpaidStudents(filters: FilterParams = {}) {
   const params: Record<string, string> = {}
 
-  // Add only defined filter values
   Object.entries(filters).forEach(([key, value]) => {
     if (value !== undefined) {
       params[key] = value

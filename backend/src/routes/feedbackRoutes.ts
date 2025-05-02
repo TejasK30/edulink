@@ -1,6 +1,6 @@
 import { Router } from "express"
 import {
-  getCollegeFeedbacks,
+  getCollegeFeedbackAnalytics,
   getStudentFeedbacks,
   getTeacherFeedbacks,
   submitFeedback,
@@ -14,6 +14,6 @@ router.get("/student/:studentId", getStudentFeedbacks)
 
 router.get("/teacher/:teacherId", getTeacherFeedbacks)
 
-router.get("/college", getCollegeFeedbacks)
+router.get("/analytics/admin/:userid", getCollegeFeedbackAnalytics)
 
 export default router

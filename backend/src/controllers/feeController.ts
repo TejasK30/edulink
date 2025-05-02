@@ -23,7 +23,6 @@ import {
   PaymentMethod,
 } from "../utils/paymentGateway"
 
-// Get available fee types
 export const getFeeTypes = async (
   req: Request,
   res: Response
@@ -45,7 +44,6 @@ export const getFeeTypes = async (
   }
 }
 
-// Get available installment options
 export const getInstallmentOptions = async (
   req: Request,
   res: Response
@@ -61,7 +59,6 @@ export const getInstallmentOptions = async (
   }
 }
 
-// Get available payment methods
 export const getPaymentMethods = async (
   req: Request,
   res: Response
@@ -99,7 +96,6 @@ export const getPaymentMethods = async (
   }
 }
 
-// Initiate payment (Step 1)
 export const initiatePayment = async (
   req: Request,
   res: Response
@@ -108,19 +104,16 @@ export const initiatePayment = async (
   const { feeTypes, installmentOption = 1, currentInstallment = 1 } = req.body
 
   try {
-    // Validate userId
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({ message: "Invalid user ID" })
     }
 
-    // Validate feeTypes
     if (!Array.isArray(feeTypes) || feeTypes.length === 0) {
       return res
         .status(400)
         .json({ message: "At least one fee type must be selected" })
     }
 
-    // Check if all fee types are valid
     const validFeeTypes = feeTypes.every((type) =>
       Object.values(FeeType).includes(type as FeeType)
     )
@@ -128,20 +121,17 @@ export const initiatePayment = async (
       return res.status(400).json({ message: "Invalid fee type provided" })
     }
 
-    // Find user
     const user = await User.findById(userId)
     if (!user) {
       return res.status(404).json({ message: "User not found" })
     }
 
-    // Validate user is a student
     if (user.role !== "student") {
       return res
         .status(403)
         .json({ message: "Only students can make fee payments" })
     }
 
-    // Create a pending payment
     const payment = await createPendingPayment(
       userId,
       user.college ? user.college.toString() : "",
@@ -169,7 +159,6 @@ export const initiatePayment = async (
   }
 }
 
-// Process payment with payment method (Step 2)
 export const processPayment = async (
   req: Request,
   res: Response
@@ -184,32 +173,27 @@ export const processPayment = async (
   )
 
   try {
-    // Validate paymentId
     if (!mongoose.Types.ObjectId.isValid(paymentId)) {
       return res.status(400).json({ message: "Invalid payment ID" })
     }
 
-    // Validate payment method
     if (
       !Object.values(PaymentMethod).includes(paymentMethod as PaymentMethod)
     ) {
       return res.status(400).json({ message: "Invalid payment method" })
     }
 
-    // Find payment
     const payment = await FeePayment.findById(paymentId)
     if (!payment) {
       return res.status(404).json({ message: "Payment not found" })
     }
 
-    // Ensure payment is in pending state
     if (payment.paymentStatus !== PaymentStatus.PENDING) {
       return res.status(400).json({
         message: `Payment is already in ${payment.paymentStatus} status and cannot be processed`,
       })
     }
 
-    // Process payment with gateway
     const { payment: updatedPayment, gatewayResponse } =
       await initiateFeePayment(
         payment,
@@ -217,9 +201,7 @@ export const processPayment = async (
         paymentDetails
       )
 
-    // Handle different gateway response statuses
     if (gatewayResponse.status === GatewayPaymentStatus.REQUIRES_OTP) {
-      // OTP verification required
       return res.status(200).json({
         message: "OTP verification required",
         requiresOTP: true,
@@ -229,7 +211,6 @@ export const processPayment = async (
         },
       })
     } else if (gatewayResponse.status === GatewayPaymentStatus.PROCESSING) {
-      // No OTP required, proceed to processing
       return res.status(200).json({
         message: "Payment is being processed",
         requiresOTP: false,
@@ -240,7 +221,6 @@ export const processPayment = async (
         },
       })
     } else if (gatewayResponse.status === GatewayPaymentStatus.FAILED) {
-      // Payment failed at validation stage
       return res.status(400).json({
         message: `Payment failed: ${gatewayResponse.failureReason}`,
         payment: {
@@ -251,7 +231,6 @@ export const processPayment = async (
       })
     }
 
-    // Fallback response
     return res
       .status(500)
       .json({ message: "Unexpected payment gateway response" })
@@ -261,27 +240,22 @@ export const processPayment = async (
   }
 }
 
-// Verify OTP if required (Step 3A - only for payments requiring OTP)
 export const verifyOTP = async (req: Request, res: Response): Promise<any> => {
   const { paymentId } = req.params
   const { otp } = req.body
 
   try {
-    // Validate paymentId
     if (!mongoose.Types.ObjectId.isValid(paymentId)) {
       return res.status(400).json({ message: "Invalid payment ID" })
     }
 
-    // Validate OTP
     if (!otp || typeof otp !== "string" || otp.length !== 6) {
       return res.status(400).json({ message: "Invalid OTP" })
     }
 
-    // Verify OTP with gateway
     const { payment, gatewayResponse } = await verifyPaymentOTP(paymentId, otp)
 
     if (gatewayResponse.status === GatewayPaymentStatus.PROCESSING) {
-      // OTP verified, proceed to processing
       return res.status(200).json({
         message: "OTP verified successfully, payment is being processed",
         payment: {
@@ -290,7 +264,6 @@ export const verifyOTP = async (req: Request, res: Response): Promise<any> => {
         },
       })
     } else if (gatewayResponse.status === GatewayPaymentStatus.FAILED) {
-      // OTP verification failed
       return res.status(400).json({
         message: `OTP verification failed: ${gatewayResponse.failureReason}`,
         payment: {
@@ -301,7 +274,6 @@ export const verifyOTP = async (req: Request, res: Response): Promise<any> => {
       })
     }
 
-    // Fallback response
     return res
       .status(500)
       .json({ message: "Unexpected gateway response for OTP verification" })
@@ -311,7 +283,6 @@ export const verifyOTP = async (req: Request, res: Response): Promise<any> => {
   }
 }
 
-// Complete payment processing (Step 3B/4 - final step)
 export const completePayment = async (
   req: Request,
   res: Response
@@ -319,24 +290,20 @@ export const completePayment = async (
   const { paymentId } = req.params
 
   try {
-    // Validate paymentId
     if (!mongoose.Types.ObjectId.isValid(paymentId)) {
       return res.status(400).json({ message: "Invalid payment ID" })
     }
 
-    // Find payment
     const payment = await FeePayment.findById(paymentId)
     if (!payment) {
       return res.status(404).json({ message: "Payment not found" })
     }
 
-    // Find user
     const user = await User.findById(payment.studentId)
     if (!user) {
       return res.status(404).json({ message: "User not found" })
     }
 
-    // Complete payment processing
     const { payment: completedPayment, success } =
       await completePaymentProcessing(paymentId, user)
 
@@ -372,7 +339,6 @@ export const completePayment = async (
   }
 }
 
-// Check payment status
 export const getPaymentStatus = async (
   req: Request,
   res: Response
@@ -380,12 +346,10 @@ export const getPaymentStatus = async (
   const { paymentId } = req.params
 
   try {
-    // Validate paymentId
     if (!mongoose.Types.ObjectId.isValid(paymentId)) {
       return res.status(400).json({ message: "Invalid payment ID" })
     }
 
-    // Find payment
     const payment = await FeePayment.findById(paymentId)
     if (!payment) {
       return res.status(404).json({ message: "Payment not found" })
@@ -412,7 +376,6 @@ export const getPaymentStatus = async (
   }
 }
 
-// Get payment history for a student
 export const getPaymentHistory = async (
   req: Request,
   res: Response
@@ -420,18 +383,15 @@ export const getPaymentHistory = async (
   const { userId } = req.params
 
   try {
-    // Validate userId
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({ message: "Invalid user ID" })
     }
 
-    // Find user
     const user = await User.findById(userId)
     if (!user) {
       return res.status(404).json({ message: "User not found" })
     }
 
-    // Get payment history
     const payments = await FeePayment.find({
       studentId: userId,
       paymentStatus: PaymentStatus.COMPLETED,
@@ -458,7 +418,6 @@ export const getPaymentHistory = async (
   }
 }
 
-// Get pending installments for a student
 export const getPendingInstallments = async (
   req: Request,
   res: Response
@@ -466,25 +425,21 @@ export const getPendingInstallments = async (
   const { userId } = req.params
 
   try {
-    // Validate userId
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({ message: "Invalid user ID" })
     }
 
-    // Find user
     const user = await User.findById(userId)
     if (!user) {
       return res.status(404).json({ message: "User not found" })
     }
 
-    // Get completed installment payments
     const completedPayments = await FeePayment.find({
       studentId: userId,
       isInstallment: true,
       paymentStatus: PaymentStatus.COMPLETED,
     }).sort({ installmentNumber: 1 })
 
-    // Group by fee type to identify pending installments
     const installmentSummary: Record<
       string,
       {
@@ -496,7 +451,6 @@ export const getPendingInstallments = async (
     > = {}
 
     completedPayments.forEach((payment) => {
-      // Create a unique key for each installment plan
       const key = payment.feeDetails
         .map((fee) => fee.feeType)
         .sort()
@@ -511,7 +465,6 @@ export const getPendingInstallments = async (
         }
       }
 
-      // Add this installment to completed ones
       if (payment.installmentNumber) {
         installmentSummary[key].completedInstallments.push(
           payment.installmentNumber
@@ -519,7 +472,6 @@ export const getPendingInstallments = async (
       }
     })
 
-    // Calculate next due installments
     const pendingInstallments: Array<{
       feeTypes: FeeType[]
       nextInstallment: number
@@ -530,10 +482,8 @@ export const getPendingInstallments = async (
     Object.keys(installmentSummary).forEach((key) => {
       const summary = installmentSummary[key]
 
-      // Get highest completed installment number
       const highestCompleted = Math.max(...summary.completedInstallments)
 
-      // If some installments are still pending
       if (
         summary.totalInstallments &&
         highestCompleted < summary.totalInstallments
@@ -554,7 +504,6 @@ export const getPendingInstallments = async (
   }
 }
 
-// Download receipt
 export const downloadReceipt = async (
   req: Request,
   res: Response
@@ -562,18 +511,15 @@ export const downloadReceipt = async (
   const { paymentId } = req.params
 
   try {
-    // Validate paymentId
     if (!mongoose.Types.ObjectId.isValid(paymentId)) {
       return res.status(400).json({ message: "Invalid payment ID" })
     }
 
-    // Find payment
     const payment = await FeePayment.findById(paymentId)
     if (!payment) {
       return res.status(404).json({ message: "Payment not found" })
     }
 
-    // Check if receipt exists
     if (!payment.receiptPath) {
       return res.status(404).json({ message: "Receipt not found" })
     }
@@ -585,19 +531,16 @@ export const downloadReceipt = async (
       payment.receiptPath
     )
 
-    // Check if file exists
     if (!fs.existsSync(receiptPath)) {
       return res.status(404).json({ message: "Receipt file not found" })
     }
 
-    // Set headers for file download
     res.setHeader("Content-Type", "application/pdf")
     res.setHeader(
       "Content-Disposition",
       `attachment; filename=Payment_Receipt_${payment.transactionId}.pdf`
     )
 
-    // Stream the file
     const fileStream = fs.createReadStream(receiptPath)
     fileStream.pipe(res)
   } catch (error) {
@@ -615,7 +558,6 @@ export const getAllFeePayments = async (
     const { page = 1, limit = 20 } = req.query
     const skip = (Number(page) - 1) * Number(limit)
 
-    // Fetch admin user
     const admin = await User.findById(userId)
     console.log(admin)
     if (!admin || admin.role !== UserRole.ADMIN) {
@@ -624,7 +566,6 @@ export const getAllFeePayments = async (
 
     const adminCollegeId = admin.college
 
-    // Aggregate payments for the admin's college
     const payments = await FeePayment.aggregate([
       {
         $match: { paymentStatus: PaymentStatus.COMPLETED },
@@ -673,11 +614,8 @@ export const getAllFeePayments = async (
       },
     ])
 
-    // Get total count of payments for this college
     const totalCount = await FeePayment.countDocuments({
       paymentStatus: PaymentStatus.COMPLETED,
-      // You need to join with students to filter by college,
-      // so for accurate count, use the same aggregation or maintain a separate cache if performance is a concern
     })
 
     return res.status(200).json({
@@ -694,7 +632,6 @@ export const getAllFeePayments = async (
   }
 }
 
-// Get failed payments (for admin)
 export const getFailedPayments = async (
   req: Request,
   res: Response
@@ -746,14 +683,12 @@ export const getFeePaymentSummary = async (
   try {
     const { userId } = req.params
 
-    // 1. Verify admin and get their college
     const admin = await User.findById(userId).select("role college")
     if (!admin || admin.role !== UserRole.ADMIN) {
       return res.status(403).json({ message: "Access denied" })
     }
     const adminCollegeId = new mongoose.Types.ObjectId(admin.college)
 
-    // Common pipeline prefix: only completed payments for students in this college
     const baseMatchAndJoin = [
       { $match: { paymentStatus: PaymentStatus.COMPLETED } },
       {
@@ -768,7 +703,6 @@ export const getFeePaymentSummary = async (
       { $match: { "student.college": adminCollegeId } },
     ]
 
-    // 2. Fee‐type summary
     const feeSummary = await FeePayment.aggregate([
       ...baseMatchAndJoin,
       { $unwind: "$feeDetails" },
@@ -789,7 +723,6 @@ export const getFeePaymentSummary = async (
       },
     ])
 
-    // 3. Payment‐method summary
     const paymentMethodSummary = await FeePayment.aggregate([
       ...baseMatchAndJoin,
       {
@@ -814,7 +747,6 @@ export const getFeePaymentSummary = async (
       },
     ])
 
-    // 4. Installment vs. full‐payment summary
     const installmentSummary = await FeePayment.aggregate([
       ...baseMatchAndJoin,
       {
@@ -834,7 +766,6 @@ export const getFeePaymentSummary = async (
       },
     ])
 
-    // 5. Monthly data
     const monthlyData = await FeePayment.aggregate([
       ...baseMatchAndJoin,
       {
@@ -876,7 +807,6 @@ export const getFeePaymentSummary = async (
   }
 }
 
-// Get user dues
 export const getUserDues = async (
   req: Request,
   res: Response
@@ -884,33 +814,26 @@ export const getUserDues = async (
   const { userId } = req.params
 
   try {
-    // Validate userId
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({ message: "Invalid user ID" })
     }
 
-    // Find user
     const user = await User.findById(userId)
     if (!user) {
       return res.status(404).json({ message: "User not found" })
     }
 
-    // Get all completed payments
     const completedPayments = await FeePayment.find({
       studentId: userId,
       paymentStatus: PaymentStatus.COMPLETED,
     })
 
-    // Get all fee types for the student's program
-    // In a real application, this would come from the student's program/course structure
     const requiredFeeTypes = Object.values(FeeType)
 
-    // Determine which fees have been paid
     const paidFeeTypes = new Set<string>()
 
     completedPayments.forEach((payment) => {
       payment.feeDetails.forEach((detail) => {
-        // If it's a full payment or the last installment, mark as fully paid
         if (
           !payment.isInstallment ||
           payment.installmentNumber === payment.totalInstallments
@@ -920,7 +843,6 @@ export const getUserDues = async (
       })
     })
 
-    // Calculate dues
     const dues = requiredFeeTypes
       .filter((feeType) => !paidFeeTypes.has(feeType))
       .map((feeType) => {
@@ -930,7 +852,7 @@ export const getUserDues = async (
           feeType,
           amount,
           label: feeType.charAt(0).toUpperCase() + feeType.slice(1),
-          dueDate: calculateNextDueDate(), // In a real app, this would be based on academic calendar
+          dueDate: calculateNextDueDate(),
         }
       })
 
@@ -941,7 +863,6 @@ export const getUserDues = async (
   }
 }
 
-// Update notification settings
 export const updateNotificationSettings = async (
   req: Request,
   res: Response
@@ -954,20 +875,15 @@ export const updateNotificationSettings = async (
   } = req.body
 
   try {
-    // Validate userId
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({ message: "Invalid user ID" })
     }
 
-    // Find user
     const user = await User.findById(userId)
     if (!user) {
       return res.status(404).json({ message: "User not found" })
     }
 
-    // Update notification settings
-    // In a real application, this would update a separate notifications settings collection
-    // For this demonstration, we'll just return success
     return res.status(200).json({
       message: "Notification settings updated successfully",
       settings: {
@@ -983,7 +899,6 @@ export const updateNotificationSettings = async (
   }
 }
 
-// Get notification settings
 export const getNotificationSettings = async (
   req: Request,
   res: Response
@@ -991,19 +906,15 @@ export const getNotificationSettings = async (
   const { userId } = req.params
 
   try {
-    // Validate userId
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({ message: "Invalid user ID" })
     }
 
-    // Find user
     const user = await User.findById(userId)
     if (!user) {
       return res.status(404).json({ message: "User not found" })
     }
 
-    // In a real application, fetch from notifications settings collection
-    // For this demonstration, return default settings
     return res.status(200).json({
       settings: {
         userId,
@@ -1018,19 +929,17 @@ export const getNotificationSettings = async (
   }
 }
 
-// Get all installments due soon (for admin)
 export const getDueInstallments = async (
   req: Request,
   res: Response
 ): Promise<any> => {
   try {
-    // Find installment payments that have subsequent payments due
     const completedInstallments = await FeePayment.aggregate([
       {
         $match: {
           isInstallment: true,
           paymentStatus: PaymentStatus.COMPLETED,
-          totalInstallments: { $gt: "$installmentNumber" }, // More installments remaining
+          totalInstallments: { $gt: "$installmentNumber" },
         },
       },
       {
@@ -1053,14 +962,12 @@ export const getDueInstallments = async (
           installmentNumber: 1,
           totalInstallments: 1,
           nextDueDate: {
-            // In a real app, this would be calculated based on the payment schedule
-            $add: ["$paymentDate", 30 * 24 * 60 * 60 * 1000], // Add 30 days
+            $add: ["$paymentDate", 30 * 24 * 60 * 60 * 1000],
           },
           remainingAmount: 1,
         },
       },
       {
-        // Sort by due date (ascending)
         $sort: { nextDueDate: 1 },
       },
     ])
@@ -1072,7 +979,6 @@ export const getDueInstallments = async (
   }
 }
 
-// Send payment reminders
 export const sendPaymentReminders = async (
   req: Request,
   res: Response
@@ -1084,7 +990,6 @@ export const sendPaymentReminders = async (
       return res.status(400).json({ message: "No payment IDs provided" })
     }
 
-    // Get payments and related students
     const payments = await FeePayment.find({
       _id: { $in: paymentIds },
       isInstallment: true,
@@ -1094,12 +999,11 @@ export const sendPaymentReminders = async (
       return res.status(404).json({ message: "No valid payments found" })
     }
 
-    // In a real app, this would send actual emails/SMS
     const results = payments.map((payment) => ({
       paymentId: payment._id,
       student: payment.studentId,
-      reminderSent: true, // Simulate successful sending
-      channel: "email", // Could be email, SMS, etc.
+      reminderSent: true,
+      channel: "email",
     }))
 
     return res.status(200).json({
@@ -1111,11 +1015,8 @@ export const sendPaymentReminders = async (
     return res.status(500).json({ message: "Internal server error" })
   }
 }
-
-// Helper function to calculate next due date
-// In a real app, this would be based on the academic calendar
 const calculateNextDueDate = (): Date => {
   const date = new Date()
-  date.setDate(date.getDate() + 30) // Set due date to 30 days from now
+  date.setDate(date.getDate() + 30)
   return date
 }

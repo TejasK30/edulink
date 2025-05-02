@@ -4,7 +4,6 @@ import { UserModel } from "../models/user"
 import { IFeePayment } from "../models/FeePayment"
 import { getReceiptPath } from "utils/pdfGenerator"
 
-// Configure nodemailer transporter
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || "smtp.gmail.com",
   port: parseInt(process.env.SMTP_PORT || "587"),
