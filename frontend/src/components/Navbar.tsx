@@ -24,7 +24,6 @@ const Navbar: React.FC = () => {
           </span>
         </Link>
 
-        {/* Desktop Navigation */}
         <div className="hidden md:flex items-center space-x-8">
           {NAVIGATION.map((item) => (
             <Link
@@ -73,7 +72,6 @@ const Navbar: React.FC = () => {
           <ThemeToggle />
         </div>
 
-        {/* Mobile Menu Toggle */}
         <div className="md:hidden">
           <Button
             variant="ghost"
@@ -85,7 +83,6 @@ const Navbar: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile Navigation Menu */}
       <div
         className={`md:hidden bg-background border-t overflow-hidden transition-all duration-300 ease-in-out ${
           mobileMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"

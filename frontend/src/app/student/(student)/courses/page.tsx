@@ -138,7 +138,6 @@ export default function StudentEnrollmentPage() {
         </CardContent>
       </Card>
 
-      {/* Available Courses Card */}
       <Card>
         <CardHeader>
           <CardTitle>Available Courses</CardTitle>
@@ -169,7 +168,6 @@ export default function StudentEnrollmentPage() {
         </CardContent>
       </Card>
 
-      {/* Enrolled Courses Card */}
       <Card>
         <CardHeader>
           <CardTitle>Enrolled Courses</CardTitle>

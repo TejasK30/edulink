@@ -104,7 +104,6 @@ export default function AssignCoursePage() {
         </CardHeader>
 
         <CardContent className="space-y-6">
-          {/* Department Selection */}
           <div className="space-y-2">
             <label htmlFor="department" className="text-sm font-medium">
               Department
@@ -127,7 +126,6 @@ export default function AssignCoursePage() {
             </Select>
           </div>
 
-          {/* Course Selection */}
           <div className="space-y-2">
             <label htmlFor="course" className="text-sm font-medium">
               Course
@@ -158,7 +156,6 @@ export default function AssignCoursePage() {
             )}
           </div>
 
-          {/* Course Details */}
           {selectedCourseId && (
             <div className="bg-muted p-4 rounded-md">
               <h3 className="font-medium mb-2">Course Details</h3>
@@ -187,7 +184,6 @@ export default function AssignCoursePage() {
             </div>
           )}
 
-          {/* Submit Button */}
           <Button
             onClick={handleSubmit}
             className="w-full"

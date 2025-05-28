@@ -160,7 +160,6 @@ export default function StudentAssignmentListPage() {
                 <p className="text-xs text-muted-foreground">
                   By: {assignment.teacherId.name}
                 </p>
-                {/* View Button */}
                 <Link
                   href={`/student/assignments/${assignment._id}`}
                   className="w-fit"
