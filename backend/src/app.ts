@@ -1,19 +1,20 @@
 import cors from "cors"
-import express, { NextFunction, Request, Response } from "express"
-import jwt from "jsonwebtoken"
+import cookieParser from "cookie-parser"
+import express from "express"
 import connectDB from "./config/db"
+import { JwtPayload } from "./middleware/auth"
 import adminRoutes from "./routes/adminRoutes"
+import announceMentRoutes from "./routes/announcementRoutes"
+import assignmentRoutes from "./routes/assignmentRoutes"
 import attendaceRoutes from "./routes/attendanceRoutes"
 import authRoutes from "./routes/authRoutes"
 import courseRoutes from "./routes/courseRoutes"
-import studentRoutes from "./routes/studentRoutes"
-import teacherRoutes from "./routes/teacherRoutes"
-import userRoutes from "./routes/userroutes"
-import announceMentRoutes from "./routes/announcementRoutes"
-import assignmentRoutes from "./routes/assignmentRoutes"
 import dashboardRoutes from "./routes/dashboardRoutes"
 import feedbackRoutes from "./routes/feedbackRoutes"
 import feeRoutes from "./routes/feeRoutes"
+import studentRoutes from "./routes/studentRoutes"
+import teacherRoutes from "./routes/teacherRoutes"
+import userRoutes from "./routes/userroutes"
 
 const app = express()
 const PORT = process.env.PORT || 5000
@@ -24,6 +25,9 @@ app.use(
     credentials: true,
   })
 )
+
+app.use(cookieParser())
+
 app.use(express.json())
 connectDB()
 
@@ -35,38 +39,15 @@ declare global {
   }
 }
 
-interface JwtPayload {
-  id: string
-  role: "admin" | "teacher" | "student"
-  collegeId?: string
-}
-
-export const authorizeRole = (
-  requiredRole: "admin" | "teacher" | "student"
-) => {
-  return (req: Request, res: Response, next: NextFunction) => {
-    const token = req.cookies?.accessToken
-    if (!token) {
-      return res.status(401).json({ message: "Unauthorized" })
-    }
-    try {
-      const decoded = jwt.verify(
-        token,
-        process.env.JWT_SECRET || "your-secret-key"
-      ) as JwtPayload
-      req.user = decoded
-      if (decoded.role !== requiredRole) {
-        return res
-          .status(403)
-          .json({ message: "Forbidden: insufficient privileges" })
-      }
-      next()
-    } catch (error: unknown) {
-      console.error("Token verification error:", error)
-      return res.status(401).json({ message: "Invalid token" })
-    }
-  }
-}
+app.get("/test-cookie", (req, res) => {
+  res.cookie("test-token", "123abc", {
+    httpOnly: true,
+    secure: false,
+    sameSite: "lax",
+    maxAge: 1000 * 60 * 60,
+  })
+  res.json({ success: true })
+})
 
 app.use("/api/auth/", authRoutes)
 app.use("/api", userRoutes)

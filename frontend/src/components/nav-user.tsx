@@ -14,6 +14,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { useAuth } from "@/lib/auth-provider"
 
 export function NavUser({
   user,
@@ -24,7 +25,7 @@ export function NavUser({
     avatar: string
   }
 }) {
-  console.log(user)
+  const { logout } = useAuth()
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -45,7 +46,7 @@ export function NavUser({
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg">
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => logout()}>
               <LogOut />
               Log out
             </DropdownMenuItem>

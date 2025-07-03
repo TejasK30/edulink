@@ -27,7 +27,6 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import api from "@/lib/api"
 import { User } from "@/lib/store"
-import axios from "axios"
 import {
   ArrowLeft,
   BookOpen,

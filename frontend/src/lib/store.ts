@@ -12,7 +12,7 @@ export type User = {
   collegeid: string
   collegname: string
   departmentid: string
-} | null
+}
 
 type College = {
   id: string
@@ -29,8 +29,8 @@ type AppState = {
   deleteCollege: (id: string) => void
   setSelectedCollege: (college: College | null) => void
   fetchColleges: () => Promise<void>
-  currentUser: User
-  setUser: (user: User) => void
+  currentUser: User | null
+  setUser: (user: User | null) => void
   clearUser: () => void
   students: (User & { role: "student" })[]
   teachers: (User & { role: "teacher" })[]

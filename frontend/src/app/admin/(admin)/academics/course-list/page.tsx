@@ -1,39 +1,40 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
+import React, { useState } from "react"
+import CourseFormDialog from "@/components/course-form"
+import CourseTable from "@/components/course-table"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Search, Plus } from "lucide-react"
 import api from "@/lib/api"
+import { useAuth } from "@/lib/auth-provider"
 import { Course } from "@/lib/types"
-import { useAppStore } from "@/lib/store"
-import CourseTable from "@/components/course-table"
-import CourseFormDialog from "@/components/course-form"
+import { useQuery } from "@tanstack/react-query"
+import { Plus, Search } from "lucide-react"
+
+const fetchCourses = async (collegeId: string): Promise<Course[]> => {
+  const response = await api.get(`/courses/college/${collegeId}`)
+  return response.data
+}
 
 const AdminCoursesPage: React.FC = () => {
-  const [courses, setCourses] = useState<Course[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [formOpen, setFormOpen] = useState(false)
   const [formMode, setFormMode] = useState<"add" | "edit">("add")
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null)
-  const { currentUser } = useAppStore()
-  const collegeId = currentUser?.collegeid || ""
 
-  const fetchCourses = async () => {
-    try {
-      const response = await api.get(`/courses/college/${collegeId}`)
-      setCourses(response.data)
-    } catch (err: unknown) {
-      console.error("Error fetching courses", err)
-    }
-  }
+  const { user, isLoading: authLoading } = useAuth()
 
-  useEffect(() => {
-    if (collegeId) {
-      fetchCourses()
-    }
-  }, [collegeId])
+  const {
+    data: courses = [],
+    isLoading,
+    error,
+    refetch,
+  } = useQuery<Course[]>({
+    queryKey: ["courses", user?.collegeId],
+    queryFn: () => fetchCourses(user!.collegeId),
+    enabled: !!user?.collegeId,
+  })
 
   const filteredCourses = courses.filter(
     (course) =>
@@ -56,22 +57,28 @@ const AdminCoursesPage: React.FC = () => {
   const handleFormSubmit = async (data: Partial<Course>) => {
     try {
       if (formMode === "add") {
-        const response = await api.post(`/courses`, { ...data, collegeId })
+        const response = await api.post(`/courses`, {
+          ...data,
+          collegeId: user!.collegeId,
+        })
         if (response.status === 201) {
           setFormOpen(false)
-          fetchCourses()
+          refetch()
         }
       } else if (formMode === "edit" && selectedCourse) {
         const response = await api.put(`/courses/${selectedCourse._id}`, data)
         if (response.status === 200) {
           setFormOpen(false)
-          fetchCourses()
+          refetch()
         }
       }
-    } catch (err: unknown) {
+    } catch (err) {
       console.error("Error submitting course", err)
     }
   }
+
+  if (authLoading) return <p>Loading user...</p>
+  if (!user?.collegeId) return <p>User not authorized</p>
 
   return (
     <div className="container mx-auto p-4 dark:text-white">
@@ -92,15 +99,23 @@ const AdminCoursesPage: React.FC = () => {
           Add Course
         </Button>
       </div>
-      <Card>
-        <CardContent>
-          <CourseTable
-            courses={filteredCourses}
-            onEdit={handleEditOpen}
-            onView={() => {}}
-          />
-        </CardContent>
-      </Card>
+
+      {isLoading ? (
+        <p>Loading courses...</p>
+      ) : error ? (
+        <p className="text-red-500">Failed to load courses.</p>
+      ) : (
+        <Card>
+          <CardContent>
+            <CourseTable
+              courses={filteredCourses}
+              onEdit={handleEditOpen}
+              onView={() => {}}
+            />
+          </CardContent>
+        </Card>
+      )}
+
       <CourseFormDialog
         open={formOpen}
         mode={formMode}

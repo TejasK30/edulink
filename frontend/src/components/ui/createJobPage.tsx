@@ -1,20 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { useForm, SubmitHandler } from "react-hook-form"
-import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form"
 import {
   Card,
   CardContent,
@@ -23,46 +9,40 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
 import api from "@/lib/api"
+import { jobSchema } from "@/lib/schemas/job.schema"
 import { useAppStore } from "@/lib/store"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useMutation } from "@tanstack/react-query"
+import { useRouter } from "next/navigation"
+import { useForm } from "react-hook-form"
+import { toast } from "sonner"
+import * as z from "zod"
 
-export type JobPosting = {
-  collegeId: string
-  jobTitle: string
-  companyName: string
-  applyLink: string
-  jobDescription: string
-  postedBy: string
-  location?: string
-  jobType?: "Full-time" | "Part-time" | "Internship" | "Contract"
-  deadline?: string
-}
+type FormValues = z.infer<typeof jobSchema>
 
-type FormValues = Omit<JobPosting, "collegeId" | "postedBy">
-
-const CreateJobPage = () => {
+export default function CreateJobPage() {
   const router = useRouter()
   const { currentUser } = useAppStore()
-  const [hasMounted, setHasMounted] = useState(false)
-
-  useEffect(() => {
-    setHasMounted(true)
-  }, [])
-
-  useEffect(() => {
-    if (hasMounted && !currentUser) {
-      toast.error("User not logged in")
-      router.push("/login")
-    }
-  }, [hasMounted, currentUser, router])
 
   const form = useForm<FormValues>({
+    resolver: zodResolver(jobSchema),
     defaultValues: {
       jobTitle: "",
       companyName: "",
@@ -74,42 +54,39 @@ const CreateJobPage = () => {
     },
   })
 
-  const onSubmit: SubmitHandler<FormValues> = async (data) => {
-    if (!currentUser) {
-      toast.error("Authentication Error: User information not found.")
-      return
-    }
-    if (currentUser.role !== "admin" && currentUser.role !== "teacher") {
-      toast.error(
-        "Unauthorized: Your role is not authorized to create job postings."
-      )
-      return
-    }
-    let url = ""
-    if (currentUser.role === "admin") {
-      url = `/admin/job-postings/${currentUser._id}`
-    } else if (currentUser.role === "teacher") {
-      url = `/teacher/job-postings/${currentUser._id}`
-    }
-    const payload: JobPosting = {
-      ...data,
-      collegeId: currentUser.collegeid,
-      postedBy: currentUser._id,
-    }
-    try {
+  const postJob = useMutation({
+    mutationFn: async (data: FormValues) => {
+      if (!currentUser) {
+        throw new Error("User not authenticated")
+      }
+      if (currentUser.role !== "admin" && currentUser.role !== "teacher") {
+        throw new Error("Unauthorized role")
+      }
+
+      const url =
+        currentUser.role === "admin"
+          ? `/admin/job-postings/${currentUser._id}`
+          : `/teacher/job-postings/${currentUser._id}`
+
+      const payload = {
+        ...data,
+        collegeId: currentUser.collegeid,
+        postedBy: currentUser._id,
+      }
+
       await api.post(url, payload)
+    },
+    onSuccess: () => {
       toast.success("Job posted successfully!")
       form.reset()
       router.push("/teacher/jobs/list")
-    } catch (error: any) {
+    },
+    onError: (error: any) => {
       toast.error(
-        error?.response?.data?.message ||
-          "Failed to post job. Please try again."
+        error?.response?.data?.message || error.message || "Failed to post job."
       )
-    }
-  }
-
-  if (!hasMounted) return null
+    },
+  })
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-6">
@@ -122,12 +99,14 @@ const CreateJobPage = () => {
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form
+              onSubmit={form.handleSubmit((values) => postJob.mutate(values))}
+              className="space-y-6"
+            >
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="jobTitle"
-                  rules={{ required: "Job title is required" }}
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Job Title</FormLabel>
@@ -141,7 +120,6 @@ const CreateJobPage = () => {
                 <FormField
                   control={form.control}
                   name="companyName"
-                  rules={{ required: "Company name is required" }}
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Company Name</FormLabel>
@@ -153,10 +131,10 @@ const CreateJobPage = () => {
                   )}
                 />
               </div>
+
               <FormField
                 control={form.control}
                 name="applyLink"
-                rules={{ required: "Application link is required" }}
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Apply Link</FormLabel>
@@ -171,10 +149,10 @@ const CreateJobPage = () => {
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="jobDescription"
-                rules={{ required: "Job description is required" }}
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Job Description</FormLabel>
@@ -189,6 +167,7 @@ const CreateJobPage = () => {
                   </FormItem>
                 )}
               />
+
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <FormField
                   control={form.control}
@@ -235,6 +214,7 @@ const CreateJobPage = () => {
                   )}
                 />
               </div>
+
               <FormField
                 control={form.control}
                 name="deadline"
@@ -248,12 +228,13 @@ const CreateJobPage = () => {
                   </FormItem>
                 )}
               />
+
               <Button
                 type="submit"
-                disabled={form.formState.isSubmitting}
+                disabled={form.formState.isSubmitting || postJob.isPending}
                 className="w-full"
               >
-                {form.formState.isSubmitting ? "Posting..." : "Post Job"}
+                {postJob.isPending ? "Posting..." : "Post Job"}
               </Button>
             </form>
           </Form>
@@ -262,5 +243,3 @@ const CreateJobPage = () => {
     </div>
   )
 }
-
-export default CreateJobPage

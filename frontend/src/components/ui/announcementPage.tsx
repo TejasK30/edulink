@@ -10,7 +10,7 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 
 export interface Announcement {
   _id: string
@@ -81,7 +81,6 @@ const AnnouncementsPage = ({ role }: AnnouncementsPageProps) => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
-  const { toast } = useToast()
 
   useEffect(() => {
     const fetchAnnouncements = async () => {
@@ -108,20 +107,11 @@ const AnnouncementsPage = ({ role }: AnnouncementsPageProps) => {
         } else {
           const errorData = await response.json()
           setError(errorData.message || "Failed to fetch announcements.")
-          toast({
-            title: errorData.message || "Fetch error",
-            variant: "destructive",
-          })
+          toast("Fetch error")
         }
       } catch (err: unknown) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Unknown error"
         setError("Error fetching announcements.")
-        toast({
-          title: "Error fetching announcements.",
-          description: errorMessage,
-          variant: "destructive",
-        })
+        toast("Error fetching announcements.")
         console.error(err)
       } finally {
         setLoading(false)
@@ -129,7 +119,7 @@ const AnnouncementsPage = ({ role }: AnnouncementsPageProps) => {
     }
 
     fetchAnnouncements()
-  }, [router, role, toast])
+  }, [router, role])
 
   const handleEdit = (announcement: Announcement) => {
     router.push(`/${role}/announcements/edit/${announcement._id}`)

@@ -295,10 +295,9 @@ export const getAdminDashboard = async (
   res: Response
 ): Promise<any> => {
   try {
-    const { userId } = req.params
-
-    if (!(await validateUser(userId, UserRole.ADMIN))) {
-      return res.status(403).json({ message: "Unauthorized access" })
+    let userId
+    if (req.user) {
+      userId = req.user.id
     }
 
     const admin = await User.findById(userId).populate("college", "collegeName")

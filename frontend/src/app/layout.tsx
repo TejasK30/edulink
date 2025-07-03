@@ -5,6 +5,7 @@ import { Inter } from "next/font/google"
 import { twMerge } from "tailwind-merge"
 import "./globals.css"
 import { Toaster } from "@/components/ui/sonner"
+import { QueryProvider } from "@/lib/query-provider"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -25,12 +26,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={twMerge(`bg-background ${inter.variable} antialiased`)}>
-        <AuthProvider>
-          <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-            {children}
-            <Toaster />
-          </ThemeProvider>
-        </AuthProvider>
+        <QueryProvider>
+          <AuthProvider>
+            <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+              {children}
+              <Toaster />
+            </ThemeProvider>
+          </AuthProvider>
+        </QueryProvider>
       </body>
     </html>
   )

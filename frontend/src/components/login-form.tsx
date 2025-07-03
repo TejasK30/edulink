@@ -1,9 +1,5 @@
 "use client"
 
-import { useState } from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -14,23 +10,24 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { Checkbox } from "@/components/ui/checkbox"
-import { useAuth } from "@/lib/auth-provider"
+import { login } from "@/services/auth"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation"
+import { useState } from "react"
+import { useForm } from "react-hook-form"
 import { toast } from "sonner"
+import * as z from "zod"
 
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
   password: z
     .string()
     .min(6, { message: "Password must be at least 6 characters" }),
-  remember: z.boolean().default(false),
 })
 
 type FormValues = z.infer<typeof formSchema>
 
 export function LoginForm() {
-  const { login } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
@@ -39,16 +36,16 @@ export function LoginForm() {
     defaultValues: {
       email: "",
       password: "",
-      remember: false,
     },
   })
 
   async function onSubmit(values: FormValues) {
     setIsLoading(true)
     try {
-      const result = await login(values.email, values.password, values.remember)
-      if (result?.success) {
-        router.push(`/${result.data.user.role}/dashboard`)
+      const result = await login(values.email, values.password)
+      if (result?.success && result.data) {
+        toast.success("Login successful")
+        router.push(`/${result.data.role}/dashboard`)
       }
     } catch (error: any) {
       console.error(error)
@@ -88,23 +85,6 @@ export function LoginForm() {
                 />
               </FormControl>
               <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="remember"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md">
-              <FormControl>
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-              <div className="space-y-1 leading-none">
-                <FormLabel className="font-normal">Remember me</FormLabel>
-              </div>
             </FormItem>
           )}
         />

@@ -1,14 +1,15 @@
-import api from "./api"
+import api from "@/lib/api"
 
 export const dashboardService = {
   getStudentDashboard: (userId: string) => {
     return api.get(`/dashboard/student/${userId}`)
   },
   getTeacherDashboard: (userId: string) => {
+    console.log(api)
     return api.get(`/dashboard/teacher/${userId}`)
   },
-  getAdminDashboard: (userId: string) => {
-    return api.get(`/dashboard/admin/${userId}`)
+  getAdminDashboard: () => {
+    return api.get(`/dashboard/admin`)
   },
 }
 

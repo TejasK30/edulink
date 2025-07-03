@@ -1,10 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useAppStore } from "@/lib/store"
+import { useEffect } from "react"
 import { useRouter } from "next/navigation"
-import api from "@/lib/api"
+import { useQuery } from "@tanstack/react-query"
+import { AxiosError } from "axios"
 import { Loader2 } from "lucide-react"
+import api from "@/lib/api"
+import { useAuth } from "@/lib/auth-provider"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import {
   Card,
   CardContent,
@@ -12,7 +15,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 interface FeedbackAnalytics {
   totalFeedbacks: number
@@ -27,42 +29,29 @@ interface FeedbackAnalytics {
 }
 
 export default function FeedbackAnalyticsPage() {
-  const { currentUser } = useAppStore()
+  const { user: currentUser } = useAuth()
   const router = useRouter()
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  const [collegeAnalytics, setCollegeAnalytics] =
-    useState<FeedbackAnalytics | null>(null)
 
   useEffect(() => {
-    if (!currentUser) {
-      return
-    }
-
-    if (currentUser.role !== "admin") {
+    if (currentUser && currentUser.role !== "admin") {
       router.push("/")
-      return
     }
-
-    const fetchCollegeAnalytics = async () => {
-      setIsLoading(true)
-      setError(null)
-      try {
-        const response = await api.get(
-          `/feedback/analytics/admin/${currentUser._id}`
-        )
-        setCollegeAnalytics(response.data)
-      } catch (error) {
-        console.error("Error fetching college feedback analytics:", error)
-        setError("Failed to load college feedback analytics.")
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchCollegeAnalytics()
   }, [currentUser, router])
+
+  const {
+    data: collegeAnalytics,
+    error,
+    isLoading,
+  } = useQuery<FeedbackAnalytics, AxiosError>({
+    enabled: !!currentUser && currentUser.role === "admin",
+    queryKey: ["college-analytics", currentUser?.id],
+    queryFn: async () => {
+      const response = await api.get(
+        `/feedback/analytics/admin/${currentUser?.id}`
+      )
+      return response.data
+    },
+  })
 
   if (isLoading && !collegeAnalytics) {
     return (
@@ -77,7 +66,7 @@ export default function FeedbackAnalyticsPage() {
       <div className="container mx-auto py-8">
         <Alert variant="destructive">
           <AlertTitle>Error</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>{error.message}</AlertDescription>
         </Alert>
       </div>
     )

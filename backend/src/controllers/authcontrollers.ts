@@ -5,7 +5,7 @@ import mongoose from "mongoose"
 import { z } from "zod"
 import College, { ICollege } from "../models/College"
 import Department, { IDepartment } from "../models/Department"
-import User from "../models/user"
+import User, { UserRole } from "../models/user"
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -315,21 +315,22 @@ const loginUser = async (req: Request, res: Response): Promise<any> => {
         .json({ message: "Invalid credentials", success: false })
     }
 
+    console.log(user.college.id)
+
     const token = jwt.sign(
       {
         id: user._id,
         role: user.role,
-        collegeId: user.college?._id,
-        departmentId: user.department?._id,
+        collegeId: user.college.id,
       },
       process.env.JWT_SECRET || "your-secret-key",
-      { expiresIn: "1d" }
+      { expiresIn: "24h" }
     )
 
-    res.cookie("accessToken", token, {
+    res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      secure: process.env.NODE_ENV === "production" ? true : false,
+      sameSite: "lax",
       maxAge: 24 * 60 * 60 * 1000,
     })
 
@@ -376,7 +377,7 @@ const getColleges = async (req: Request, res: Response): Promise<any> => {
 }
 
 const logoutUser = (req: Request, res: Response): void => {
-  res.clearCookie("accessToken", {
+  res.clearCookie("token", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
@@ -399,6 +400,31 @@ export const getDepartmentsByCollege = async (
     return res
       .status(500)
       .json({ message: "Internal server error", success: false })
+  }
+}
+
+export const getProfile = async (req: Request, res: Response): Promise<any> => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: "Unauthorized" })
+    }
+
+    const user = await User.findById(req.user.id).select("_id role college")
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" })
+    }
+
+    return res.status(200).json({
+      user: {
+        id: user._id,
+        role: user.role,
+        collegeId: user.college,
+      },
+    })
+  } catch (error) {
+    console.error("Error fetching profile:", error)
+    return res.status(500).json({ message: "Server error" })
   }
 }
 

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { dashboardService } from "@/lib/dashboard-service"
 import {
   Card,
   CardContent,
@@ -34,6 +33,7 @@ import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useAppStore } from "@/lib/store"
 import Link from "next/link"
+import { dashboardService } from "@/services/dashboardService"
 
 interface StudentInfo {
   name: string

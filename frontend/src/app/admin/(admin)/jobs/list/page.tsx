@@ -1,55 +1,55 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import api from "@/lib/api"
-import { toast } from "sonner"
-import JobListing, { JobPosting } from "@/components/JobListing"
-import { useAppStore } from "@/lib/store"
+import { useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { useQuery } from "@tanstack/react-query"
+import { toast } from "sonner"
+import api from "@/lib/api"
+import JobListing, { JobPosting } from "@/components/JobListing"
+import { Loader2 } from "lucide-react"
+import { useAuth } from "@/lib/auth-provider"
 
 const AdminJobsList = () => {
-  const [jobs, setJobs] = useState<JobPosting[]>([])
-  const [hasMounted, setHasMounted] = useState(false)
-  const { currentUser } = useAppStore()
+  const { user } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
-    setHasMounted(true)
-  }, [])
-
-  useEffect(() => {
-    if (hasMounted && !currentUser) {
+    if (!user) {
       toast.error("User not logged in")
       router.push("/login")
     }
-  }, [hasMounted, currentUser, router])
+  }, [user, router])
 
-  useEffect(() => {
-    const fetchJobs = async () => {
-      if (currentUser?.collegeid) {
-        try {
-          const response = await api.get(
-            `/student/jobs/${currentUser.collegeid}`
-          )
-          setJobs(response.data)
-        } catch (error: any) {
-          toast.error(
-            error?.response?.data?.message || "Failed to load job postings."
-          )
-        }
-      } else if (hasMounted && currentUser) {
-        console.warn(
-          "currentUser exists but collegeid is undefined:",
-          currentUser
-        )
-        toast.error("User college information is missing.")
-      }
-    }
+  const {
+    data: jobs,
+    isLoading,
+    error,
+  } = useQuery<JobPosting[], Error>({
+    enabled: !!user?.collegeId,
+    queryKey: ["jobs", user?.collegeId],
+    queryFn: async () => {
+      const res = await api.get(`/student/jobs/${user?.collegeId}`)
+      return res.data
+    },
+  })
 
-    if (currentUser) {
-      fetchJobs()
-    }
-  }, [currentUser, hasMounted])
+  if (isLoading) {
+    return (
+      <div className="flex h-40 items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        <span className="ml-2 text-muted-foreground">Loading jobs...</span>
+      </div>
+    )
+  }
+
+  if (error || !jobs) {
+    return (
+      <div className="p-6">
+        <h1 className="text-2xl font-bold mb-4">Job Listings</h1>
+        <p className="text-destructive">Failed to load job listings.</p>
+      </div>
+    )
+  }
 
   return (
     <div className="p-6">

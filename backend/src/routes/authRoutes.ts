@@ -7,10 +7,13 @@ import {
   getColleges,
   logoutUser,
   getDepartmentsByCollege,
+  getProfile,
 } from "../controllers/authcontrollers"
+import { authenticate } from "../middleware/auth"
 
 router.post("/login", loginUser)
 router.post("/logout", logoutUser)
+router.get("/profile/me", authenticate, getProfile)
 router.post("/register", registerUser)
 router.post("/register/admin", registerAdminWithCollege)
 router.get("/colleges", getColleges)
