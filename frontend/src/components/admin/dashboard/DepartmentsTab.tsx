@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Department } from "@/types/dashboard/types"
+import { Department } from "@/types/dashboard.types"
 import {
   Bar,
   BarChart,

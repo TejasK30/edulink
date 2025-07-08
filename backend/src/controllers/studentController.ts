@@ -6,6 +6,7 @@ import Department from "../models/Department"
 import User, { UserRole } from "../models/user"
 import Attendance from "../models/Attendance"
 import JobPosting from "../models/JobPosting"
+import Semester from "../models/Semester"
 
 export const getStudentDepartment = async (
   req: Request,
@@ -305,5 +306,25 @@ export const getJobsByCollegeStudent = async (
     res.status(200).json(jobs)
   } catch (error) {
     res.status(500).json({ message: "Server error" })
+  }
+}
+
+export const getSemestersByCollegeForStudent = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { collegeId } = req.params
+
+    console.log(collegeId)
+    if (!collegeId)
+      return res.status(400).json({ message: "College ID is required" })
+    const semesters = await Semester.find({ collegeId })
+    return res.json(semesters)
+  } catch (error: any) {
+    console.error(error)
+    return res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message })
   }
 }

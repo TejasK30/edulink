@@ -19,7 +19,7 @@ export const getUsersByRole = async (
       college: collegeId,
     })
 
-    return res.json(users)
+    return res.json({ users: users })
   } catch (error: any) {
     console.error("Error fetching users by role and collegeId:", error)
     return res

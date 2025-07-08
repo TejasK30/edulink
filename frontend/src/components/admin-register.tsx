@@ -19,7 +19,8 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import api from "@/lib/api"
-import { AdminRegisterData, useAuth } from "@/lib/auth-provider"
+import { registerAdminWithCollege } from "@/services/auth"
+import { AdminRegisterData } from "@/types/auth"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
@@ -65,7 +66,6 @@ interface AdminRegistrationFormProps {
 }
 
 export function AdminRegistrationForm({ onBack }: AdminRegistrationFormProps) {
-  const { registerAdminWithCollege } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [colleges, setColleges] = useState<
     { _id: string; collegeName: string }[]
@@ -128,7 +128,7 @@ export function AdminRegistrationForm({ onBack }: AdminRegistrationFormProps) {
           throw new Error("College name is required for a new college")
         }
         payload.collegeName = values.collegeName
-        payload.collegeLocation = values.collegeLocation
+        payload.collegeLocation = values.collegeLocation as string
       }
 
       await registerAdminWithCollege(payload as AdminRegisterData)

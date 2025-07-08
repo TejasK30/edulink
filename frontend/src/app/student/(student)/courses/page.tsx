@@ -18,101 +18,110 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import api from "@/lib/api"
-import { useAppStore } from "@/lib/store"
-import { useEffect, useState } from "react"
+import { useAuth } from "@/lib/auth-provider"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useState } from "react"
 import { toast } from "sonner"
 
+// --- 1. Proper TS interfaces ---
+interface Semester {
+  _id: string
+  name: string
+  year: number
+}
+
+interface Course {
+  _id: string
+  name: string
+  code: string
+  credits: number
+}
+
+// --- 2. Enrollment page ---
 export default function StudentEnrollmentPage() {
-  const [courses, setCourses] = useState<any[]>([])
-  const [enrolledCourses, setEnrolledCourses] = useState<any[]>([])
-  const [availableSemesters, setAvailableSemesters] = useState<any[]>([])
+  const queryClient = useQueryClient()
+  const { user: currentUser } = useAuth()
+  const studentId = currentUser?.id
+  const collegeId = currentUser?.collegeId
   const [selectedSemester, setSelectedSemester] = useState<string>("")
 
-  const { currentUser } = useAppStore()
-  const studentId = currentUser?._id
-  const collegeId = currentUser?.collegeid
-
-  useEffect(() => {
-    if (!collegeId) {
-      toast("College ID is missing.")
-      return
-    }
-    async function fetchSemesters() {
-      try {
-        const response = await api.get(`/admin/colleges/${collegeId}/semesters`)
-        setAvailableSemesters(response.data)
-      } catch (error: any) {
-        toast("Failed to load semesters.")
-      }
-    }
-    fetchSemesters()
-  }, [collegeId])
-
-  useEffect(() => {
-    if (!collegeId || !selectedSemester) return
-    async function fetchCourses() {
-      try {
-        console.log(
-          "Fetching courses for collegeId:",
-          collegeId,
-          "semesterId:",
-          selectedSemester
+  // 2.1 Fetch available semesters
+  const { data: availableSemesters = [], isLoading: loadingSemesters } =
+    useQuery<Semester[], Error>({
+      queryKey: ["semesters", collegeId],
+      queryFn: async () => {
+        if (!collegeId) throw new Error("Missing collegeId")
+        const res = await api.get<Semester[]>(
+          `/student/colleges/${collegeId}/semesters`
         )
-        const response = await api.get("/courses/available", {
-          params: { collegeId, semesterId: selectedSemester },
-        })
-        console.log("Courses:", response.data)
-        setCourses(response.data)
-      } catch (error: any) {
-        toast(error.response?.data?.message || "Failed to load courses")
-      }
-    }
-    fetchCourses()
-  }, [collegeId, selectedSemester])
+        return res.data
+      },
+      enabled: Boolean(collegeId),
+    })
 
-  useEffect(() => {
-    if (!studentId) return
-    async function fetchEnrolledCourses() {
-      try {
-        const response = await api.get(`/student/${studentId}/enrolled-courses`)
-        setEnrolledCourses(response.data.courses)
-      } catch (error: any) {
-        toast(
-          error.response?.data?.message || "Failed to load enrolled courses"
-        )
-      }
-    }
-    fetchEnrolledCourses()
-  }, [studentId])
+  // 2.2 Fetch available courses for the selected semester
+  const { data: courses = [], isLoading: loadingCourses } = useQuery<
+    Course[],
+    Error
+  >({
+    queryKey: ["availableCourses", collegeId, selectedSemester],
+    queryFn: async () => {
+      if (!collegeId || !selectedSemester) throw new Error("Missing params")
+      const res = await api.get<Course[]>("/courses/available", {
+        params: { collegeId, semesterId: selectedSemester },
+      })
+      return res.data
+    },
+    enabled: Boolean(collegeId && selectedSemester),
+  })
 
-  async function bulkEnroll() {
-    if (!studentId || !collegeId || !selectedSemester) {
-      toast("Missing required information.")
-      return
-    }
-    try {
-      const response = await api.post(`/student/${studentId}/enroll-all`, {
+  // 2.3 Fetch already enrolled courses
+  const { data: enrolledCourses = [], isLoading: loadingEnrolled } = useQuery<
+    Course[],
+    Error
+  >({
+    queryKey: ["enrolledCourses", studentId],
+    queryFn: async () => {
+      if (!studentId) throw new Error("Missing studentId")
+      const res = await api.get<{ courses: Course[] }>(
+        `/student/${studentId}/enrolled-courses`
+      )
+      return res.data.courses
+    },
+    enabled: Boolean(studentId),
+  })
+
+  // 2.4 Bulk enroll mutation
+  const bulkEnrollMutation = useMutation<
+    { message: string; enrollments?: Course[] },
+    Error
+  >({
+    mutationFn: async () => {
+      if (!studentId || !collegeId || !selectedSemester) {
+        throw new Error("Missing required information.")
+      }
+      const res = await api.post(`/student/${studentId}/enroll-all`, {
         collegeId,
         semesterId: selectedSemester,
       })
-      toast(response.data.message || "Bulk enrollment successful.")
+      return res.data
+    },
+    onSuccess: (data) => {
+      toast.success(data.message ?? "Bulk enrollment successful.")
+      queryClient.invalidateQueries({
+        queryKey: ["enrolledCourses", studentId],
+      })
+    },
+    onError: (err) => {
+      toast.error(err.message || "Bulk enrollment failed.")
+    },
+  })
 
-      if (response.data && response.data.enrollments?.length > 0) {
-        const enrolledResponse = await api.get(
-          `/student/${studentId}/enrolled-courses`
-        )
-        setEnrolledCourses(enrolledResponse.data)
-      }
-    } catch (error: any) {
-      toast(
-        error.response?.data?.message ||
-          "Bulk enrollment failed. Please try again."
-      )
-    }
-  }
+  const isEnrolling = bulkEnrollMutation.status === "pending"
 
   return (
     <div className="container mx-auto p-4 space-y-8">
+      {/* --- Semester Selector --- */}
       <Card>
         <CardHeader>
           <CardTitle>Select Semester</CardTitle>
@@ -123,27 +132,46 @@ export default function StudentEnrollmentPage() {
               <SelectValue placeholder="Select a semester" />
             </SelectTrigger>
             <SelectContent>
-              {availableSemesters.map((sem: any) => (
-                <SelectItem key={sem._id} value={sem._id}>
-                  {sem.name} {sem.year}
+              {loadingSemesters ? (
+                <SelectItem disabled value="loading">
+                  Loading...
                 </SelectItem>
-              ))}
+              ) : availableSemesters.length === 0 ? (
+                <SelectItem disabled value="no-semesters">
+                  No semesters available
+                </SelectItem>
+              ) : (
+                availableSemesters.map((sem) => (
+                  <SelectItem key={sem._id} value={sem._id}>
+                    {sem.name} {sem.year}
+                  </SelectItem>
+                ))
+              )}
             </SelectContent>
           </Select>
+
           {selectedSemester && (
             <div className="mt-4">
-              <Button onClick={bulkEnroll}>Enroll in All Courses</Button>
+              <Button
+                onClick={() => bulkEnrollMutation.mutate()}
+                disabled={isEnrolling}
+              >
+                {isEnrolling ? "Enrolling..." : "Enroll in All Courses"}
+              </Button>
             </div>
           )}
         </CardContent>
       </Card>
 
+      {/* --- Available Courses --- */}
       <Card>
         <CardHeader>
           <CardTitle>Available Courses</CardTitle>
         </CardHeader>
         <CardContent>
-          {courses.length === 0 ? (
+          {loadingCourses ? (
+            <p>Loading courses…</p>
+          ) : courses.length === 0 ? (
             <p>No courses available for the selected semester.</p>
           ) : (
             <Table>
@@ -168,12 +196,15 @@ export default function StudentEnrollmentPage() {
         </CardContent>
       </Card>
 
+      {/* --- Enrolled Courses --- */}
       <Card>
         <CardHeader>
           <CardTitle>Enrolled Courses</CardTitle>
         </CardHeader>
         <CardContent>
-          {enrolledCourses.length === 0 ? (
+          {loadingEnrolled ? (
+            <p>Loading enrolled courses…</p>
+          ) : enrolledCourses.length === 0 ? (
             <p>No enrolled courses.</p>
           ) : (
             <Table>
@@ -187,9 +218,9 @@ export default function StudentEnrollmentPage() {
               <TableBody>
                 {enrolledCourses.map((course) => (
                   <TableRow key={course._id}>
-                    <TableHead>{course.name}</TableHead>
-                    <TableHead>{course.code}</TableHead>
-                    <TableHead>{course.credits}</TableHead>
+                    <TableCell>{course.name}</TableCell>
+                    <TableCell>{course.code}</TableCell>
+                    <TableCell>{course.credits}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

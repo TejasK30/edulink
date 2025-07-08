@@ -1,7 +1,7 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Job } from "@/types/dashboard/types"
+import { Job } from "@/types/dashboard.types"
 import { formatDate } from "@/lib/dashboard/utils"
 
 export default function JobPostings({ postings }: { postings: Job[] }) {

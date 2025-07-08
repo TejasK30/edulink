@@ -10,91 +10,44 @@ import {
 } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import api from "@/lib/api"
-import { useAppStore } from "@/lib/store"
-import { useEffect, useState } from "react"
-import { toast } from "sonner"
+import { useAuth } from "@/lib/auth-provider"
+import { AssignmentPageCourse, AssignmentPageType } from "@/types/student.types"
+import { useQuery } from "@tanstack/react-query"
 import Link from "next/link"
-
-interface Course {
-  _id: string
-  name: string
-  code: string
-}
-
-interface Assignment {
-  _id: string
-  title: string
-  name: string
-  dueDate: string
-  teacherId: { _id: string; name: string }
-}
+import { useState } from "react"
 
 export default function StudentAssignmentListPage() {
-  const [enrolledCourses, setEnrolledCourses] = useState<Course[]>([])
+  const { user: currentUser } = useAuth()
+  const studentId = currentUser?.id
   const [selectedCourse, setSelectedCourse] = useState<string>("")
-  const [assignments, setAssignments] = useState<Assignment[]>([])
-  const [loadingCourses, setLoadingCourses] = useState<boolean>(true)
-  const [loadingAssignments, setLoadingAssignments] = useState<boolean>(false)
 
-  const { currentUser } = useAppStore()
+  const { data: enrolledCourses = [], isLoading: loadingCourses } = useQuery<
+    AssignmentPageCourse[],
+    Error
+  >({
+    queryKey: ["enrolledCourses", studentId],
+    queryFn: async () => {
+      const res = await api.get<{ courses: AssignmentPageCourse[] }>(
+        `/student/${studentId}/enrolled-courses`
+      )
+      return Array.isArray(res.data.courses) ? res.data.courses : []
+    },
+    enabled: Boolean(studentId),
+  })
 
-  useEffect(() => {
-    const fetchEnrolledCourses = async () => {
-      try {
-        const response = await api.get(
-          `/student/${currentUser?._id}/enrolled-courses`
-        )
-        if (response.data && Array.isArray(response.data.courses)) {
-          setEnrolledCourses(response.data.courses as Course[])
-        } else {
-          console.error(
-            "Error: Enrolled courses data is not in the expected format:",
-            response.data
-          )
-          toast("Failed to load enrolled courses. Please try again.")
-          setEnrolledCourses([])
-        }
-      } catch (error: any) {
-        console.error("Error fetching enrolled courses:", error)
-        toast("Failed to load enrolled courses. Please try again.")
-        setEnrolledCourses([])
-      } finally {
-        setLoadingCourses(false)
-      }
-    }
-    if (currentUser?._id) {
-      fetchEnrolledCourses()
-    }
-  }, [currentUser?._id])
-
-  useEffect(() => {
-    const fetchAssignments = async () => {
-      if (!selectedCourse) return
-      setLoadingAssignments(true)
-      try {
-        console.log(selectedCourse)
-        const response = await api.get(`/assignments/course/${selectedCourse}`)
-        console.log(response.data)
-        if (Array.isArray(response.data)) {
-          setAssignments(response.data as Assignment[])
-        } else {
-          console.error(
-            "Error: Assignments data is not an array:",
-            response.data
-          )
-          toast("Failed to load assignments. Please try again.")
-          setAssignments([])
-        }
-      } catch (error: any) {
-        console.error("Error fetching assignments:", error)
-        toast("Failed to load assignments. Please try again.")
-        setAssignments([])
-      } finally {
-        setLoadingAssignments(false)
-      }
-    }
-    fetchAssignments()
-  }, [selectedCourse])
+  const { data: assignments = [], isLoading: loadingAssignments } = useQuery<
+    AssignmentPageType[],
+    Error
+  >({
+    queryKey: ["assignments", selectedCourse],
+    queryFn: async () => {
+      const res = await api.get<AssignmentPageType[]>(
+        `/assignments/course/${selectedCourse}`
+      )
+      return Array.isArray(res.data) ? res.data : []
+    },
+    enabled: Boolean(selectedCourse),
+  })
 
   return (
     <div className="container mx-auto p-6">
@@ -118,7 +71,7 @@ export default function StudentAssignmentListPage() {
             ) : (
               enrolledCourses.map((course) => (
                 <SelectItem key={course._id} value={course._id}>
-                  {course.code} - {course.name}
+                  {course.code} – {course.name}
                 </SelectItem>
               ))
             )}
@@ -146,13 +99,12 @@ export default function StudentAssignmentListPage() {
         <p>No assignments available for the selected course.</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {assignments.map((assignment: Assignment) => (
+          {assignments.map((assignment) => (
             <Card key={assignment._id} className="p-4">
               <CardHeader>
                 <CardTitle>{assignment.title}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {" "}
                 <p className="text-sm">{assignment.name}</p>
                 <p className="text-sm">
                   Due: {new Date(assignment.dueDate).toLocaleDateString()}
@@ -160,10 +112,7 @@ export default function StudentAssignmentListPage() {
                 <p className="text-xs text-muted-foreground">
                   By: {assignment.teacherId.name}
                 </p>
-                <Link
-                  href={`/student/assignments/${assignment._id}`}
-                  className="w-fit"
-                >
+                <Link href={`/student/assignments/${assignment._id}`}>
                   <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                     View
                   </button>
