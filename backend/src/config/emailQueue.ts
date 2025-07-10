@@ -1,7 +1,7 @@
 import { Queue } from "bullmq"
-import { connection } from "../config/redis"
+import { redis } from "./redis"
 
-export const emailQueue = new Queue("emailQueue", { connection })
+export const emailQueue = new Queue("emailQueue", { connection: redis })
 
 export interface EmailJobData {
   type: "paymentConfirmation" | "paymentReminder"

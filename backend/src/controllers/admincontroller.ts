@@ -450,7 +450,8 @@ export const createJobPostingByAdmin = async (
 ): Promise<any> => {
   try {
     const { adminId } = req.params
-    const { collegeId, companyName, applyLink, jobDescription } = req.body
+    const { jobTitle, collegeId, companyName, applyLink, jobDescription } =
+      req.body
 
     if (!mongoose.isValidObjectId(adminId)) {
       return res.status(400).json({ message: "Invalid admin ID" })
@@ -461,6 +462,7 @@ export const createJobPostingByAdmin = async (
 
     const newJobPosting = new JobPosting({
       collegeId,
+      jobTitle,
       companyName,
       applyLink,
       jobDescription,

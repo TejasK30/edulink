@@ -284,7 +284,7 @@ export const getStudentAttendance = async (
   }
 }
 
-export const getJobsByCollegeStudent = async (
+export const getJobsByCollegeForStudent = async (
   req: Request,
   res: Response
 ): Promise<any> => {

@@ -5,19 +5,26 @@ export interface Topic {
   description: string
 }
 
+export interface PopulatedTeacher {
+  _id: Types.ObjectId
+  name: string
+}
+
 export interface ICourse extends Document {
   collegeId: Types.ObjectId
   departmentId: Types.ObjectId
   semesterId: Types.ObjectId
-  teacherId: Types.ObjectId
+  teacherId: Types.ObjectId | PopulatedTeacher
   name: string
   code: string
   credits: number
   description?: string
   topics: Topic[]
   enrolledStudents: Types.ObjectId[]
+  capacity?: number
+  createdAt?: Date
+  updatedAt?: Date
 }
-
 const TopicSchema = new Schema<Topic>({
   title: { type: String, required: true },
   description: { type: String, required: true },

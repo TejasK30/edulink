@@ -3,7 +3,7 @@ import {
   bulkEnrollStudentInSemester,
   getCoursesByDepartmentId,
   getEnrolledCourses,
-  getJobsByCollegeStudent,
+  getJobsByCollegeForStudent,
   getSemestersByCollegeForStudent,
   getStudentAssignments,
   getStudentAttendance,
@@ -20,7 +20,7 @@ router.get("/assignments/:studentId", getStudentAssignments)
 router.get("/department/:departmentId", getStudentDepartment)
 router.get("/department/:departmentId/courses", getCoursesByDepartmentId)
 router.get("/attendance/:studentId", getStudentAttendance)
-router.get("/jobs/:collegeId", getJobsByCollegeStudent)
+router.get("/jobs/:collegeId", getJobsByCollegeForStudent)
 router.get("/colleges/:collegeId/semesters", getSemestersByCollegeForStudent)
 
 export default router
