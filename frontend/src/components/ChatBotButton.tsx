@@ -15,8 +15,6 @@ import { Input } from "@/components/ui/input"
 
 import { ScrollArea } from "@/components/ui/scroll-area"
 
-import { useAppStore } from "@/lib/store"
-
 import { cn } from "@/lib/utils"
 
 import { AnimatePresence, motion } from "framer-motion"
@@ -27,6 +25,7 @@ import React, { useEffect, useRef, useState } from "react"
 
 import "dotenv/config"
 
+import { useAuth } from "@/lib/auth-provider"
 import axios from "axios"
 
 interface Message {
@@ -55,7 +54,7 @@ const ChatbotButton: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
   const chatContainerRef = useRef<HTMLDivElement>(null)
 
-  const { currentUser } = useAppStore()
+  const { user: currentUser } = useAuth()
 
   useEffect(() => {
     if (!isOpen) {
@@ -108,7 +107,7 @@ const ChatbotButton: React.FC = () => {
       return
     }
 
-    if (!currentUser?._id) {
+    if (!currentUser?.id) {
       setMessages((prev) => [
         ...prev,
         {
@@ -136,7 +135,7 @@ const ChatbotButton: React.FC = () => {
 
     try {
       const res = await axios.post(
-        `http://localhost:8000/api/chat/${currentUser._id}`,
+        `http://localhost:8000/api/chat/${currentUser.id}`,
         { message: userMessage.content },
         { headers: { "Content-Type": "application/json" } }
       )
@@ -319,14 +318,14 @@ const ChatbotButton: React.FC = () => {
                   <Input
                     ref={inputRef}
                     placeholder={
-                      currentUser?._id
+                      currentUser?.id
                         ? "Ask me anything..."
                         : "Please log in to chat..."
                     }
                     value={input}
                     onChange={handleInputChange}
                     className="flex-1 text-sm h-10"
-                    disabled={!currentUser?._id || isLoading}
+                    disabled={!currentUser?.id || isLoading}
                     autoFocus={isOpen}
                   />
                   <motion.div
@@ -336,7 +335,7 @@ const ChatbotButton: React.FC = () => {
                     <Button
                       type="submit"
                       size="icon"
-                      disabled={!input.trim() || !currentUser?._id || isLoading}
+                      disabled={!input.trim() || !currentUser?.id || isLoading}
                       className="h-10 w-10 rounded-full bg-primary hover:bg-primary/90 transition-colors"
                     >
                       <SendHorizonal className="h-5 w-5" />

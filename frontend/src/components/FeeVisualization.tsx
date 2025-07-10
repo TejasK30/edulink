@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Table,
@@ -10,25 +10,25 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { feeApi } from "@/lib/api"
+import { useAuth } from "@/lib/auth-provider"
+import { formatCurrency } from "@/lib/types"
+import { Loader2 } from "lucide-react"
+import { useEffect, useState } from "react"
 import {
-  BarChart,
   Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip as ReTooltip,
+  TooltipProps,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip as ReTooltip,
-  Legend,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  TooltipProps,
 } from "recharts"
-import { feeApi } from "@/lib/api"
-import { Loader2 } from "lucide-react"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { useAppStore } from "@/lib/store"
-import { formatCurrency } from "@/lib/types"
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28"]
 const MONTH_NAMES = [
@@ -126,16 +126,16 @@ export default function FeeVisualization() {
   const [summary, setSummary] = useState<PaymentSummary | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
-  const { currentUser } = useAppStore()
+  const { user: currentUser } = useAuth()
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!currentUser?._id) return
+      if (!currentUser?.id) return
       try {
         setIsLoading(true)
-        const paymentsRes = await feeApi.getAllPayments(currentUser._id)
+        const paymentsRes = await feeApi.getAllPayments(currentUser.id)
         setPayments(paymentsRes.data.payments)
-        const summaryRes = await feeApi.getPaymentSummary(currentUser._id)
+        const summaryRes = await feeApi.getPaymentSummary(currentUser.id)
         setSummary(summaryRes.data)
       } catch (err: any) {
         setError(err.response?.data?.message ?? "Failed to load payment data")
@@ -144,7 +144,7 @@ export default function FeeVisualization() {
       }
     }
     fetchData()
-  }, [currentUser?._id])
+  }, [currentUser?.id])
 
   if (isLoading) {
     return (

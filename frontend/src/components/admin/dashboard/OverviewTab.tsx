@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { AdminData, Semester } from "@/types/dashboard.types"
+import { AdminData, Semester } from "@/types/admin.types"
 import {
   Pie,
   PieChart,

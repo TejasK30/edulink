@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import api from "@/lib/api"
-import { useAppStore } from "@/lib/store"
+import { useAuth } from "@/lib/auth-provider"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
@@ -42,9 +42,9 @@ interface GradeEntry {
 }
 
 export default function TeacherGradingPage() {
-  const { currentUser } = useAppStore()
+  const { user: currentUser } = useAuth()
   const router = useRouter()
-  const teacherId = currentUser?._id || ""
+  const teacherId = currentUser?.id || ""
   const [courses, setCourses] = useState<Course[]>([])
   const [selectedCourse, setSelectedCourse] = useState<string>("")
   const [gradeType, setGradeType] = useState<"assignment" | "exam">(

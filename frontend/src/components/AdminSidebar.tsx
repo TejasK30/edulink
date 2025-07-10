@@ -51,8 +51,8 @@ const AdminNavItems = [
     title: "Jobs",
     icon: Briefcase,
     items: [
-      { title: "Create", url: "/admin/assignments/create" },
-      { title: "List", url: "/admin/assignments/list" },
+      { title: "Create", url: "/admin/jobs/create" },
+      { title: "List", url: "/admin/jobs/list" },
     ],
   },
   {

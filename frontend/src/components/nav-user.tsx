@@ -6,8 +6,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuTrigger,
   DropdownMenuItem,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
   SidebarMenu,
@@ -26,6 +26,7 @@ export function NavUser({
   }
 }) {
   const { logout } = useAuth()
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -46,7 +47,7 @@ export function NavUser({
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg">
-            <DropdownMenuItem onClick={() => logout()}>
+            <DropdownMenuItem onClick={async () => await logout()}>
               <LogOut />
               Log out
             </DropdownMenuItem>

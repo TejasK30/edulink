@@ -28,7 +28,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { CheckIcon, XIcon } from "lucide-react"
 import { toast } from "sonner"
 import api from "@/lib/api"
-import { useAppStore } from "@/lib/store"
+import { useAuth } from "@/lib/auth-provider"
 
 interface ICourse {
   _id: string
@@ -58,11 +58,11 @@ const AttendanceMarkingComponent = () => {
     AttendanceRecord[]
   >([])
   const [isDatePickerOpen, setIsDatePickerOpen] = useState<boolean>(false)
-  const { currentUser } = useAppStore()
+  const { user: currentUser } = useAuth()
 
   console.log(currentUser)
 
-  const teacherId = currentUser?._id
+  const teacherId = currentUser?.id
 
   useEffect(() => {
     const fetchTeacherCourses = async () => {
@@ -145,7 +145,7 @@ const AttendanceMarkingComponent = () => {
       toast.error("Teacher ID is missing")
       return
     }
-    if (!currentUser.collegeid) {
+    if (!currentUser.collegeId) {
       toast.error("College information is missing")
       return
     }
@@ -159,8 +159,8 @@ const AttendanceMarkingComponent = () => {
     }
 
     try {
-      const response = await api.post(`/attendance/mark/${teacherId}`, {
-        collegeId: currentUser.collegeid,
+      await api.post(`/attendance/mark/${teacherId}`, {
+        collegeId: currentUser.collegeId,
         departmentId: selectedCourseDetails.departmentId._id,
         courseId: selectedCourse,
         date: selectedDate.toISOString(),

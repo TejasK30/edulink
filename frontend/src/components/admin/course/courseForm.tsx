@@ -1,15 +1,6 @@
 "use client"
 
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { toast } from "sonner"
-import {
-  Department,
-  Semester,
-  Teacher,
-  Course,
-  CourseFormSchemaType,
-} from "@/types/course.types"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -35,9 +26,18 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { Button } from "@/components/ui/button"
-import { courseFormSchema } from "@/lib/schemas/course.schema"
 import { useCreateCourse, useUpdateCourse } from "@/hooks/useCourse"
+import { courseFormSchema } from "@/lib/schemas/course.schema"
+import {
+  Course,
+  CourseFormSchemaType,
+  Department,
+  Semester,
+  Teacher,
+} from "@/types/course.types"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { toast } from "sonner"
 
 interface CourseFormProps {
   departments: Department[]

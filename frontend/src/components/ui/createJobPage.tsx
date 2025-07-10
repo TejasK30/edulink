@@ -26,8 +26,8 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import api from "@/lib/api"
+import { useAuth } from "@/lib/auth-provider"
 import { jobSchema } from "@/lib/schemas/job.schema"
-import { useAppStore } from "@/lib/store"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation } from "@tanstack/react-query"
 import { useRouter } from "next/navigation"
@@ -39,7 +39,7 @@ type FormValues = z.infer<typeof jobSchema>
 
 export default function CreateJobPage() {
   const router = useRouter()
-  const { currentUser } = useAppStore()
+  const { user: currentUser } = useAuth()
 
   const form = useForm<FormValues>({
     resolver: zodResolver(jobSchema),
@@ -65,13 +65,13 @@ export default function CreateJobPage() {
 
       const url =
         currentUser.role === "admin"
-          ? `/admin/job-postings/${currentUser._id}`
-          : `/teacher/job-postings/${currentUser._id}`
+          ? `/admin/job-postings/${currentUser.id}`
+          : `/teacher/job-postings/${currentUser.id}`
 
       const payload = {
         ...data,
-        collegeId: currentUser.collegeid,
-        postedBy: currentUser._id,
+        collegeId: currentUser.collegeId,
+        postedBy: currentUser.id,
       }
 
       await api.post(url, payload)

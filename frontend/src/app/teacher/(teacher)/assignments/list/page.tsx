@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import api from "@/lib/api"
-import { useAppStore } from "@/lib/store"
+import { useAuth } from "@/lib/auth-provider"
 import { cn } from "@/lib/utils"
 import { format, isPast } from "date-fns"
 import { ArrowLeft, Eye, PlusCircle } from "lucide-react"
@@ -22,21 +22,21 @@ interface Assignment {
 
 const AssignmentListPage = () => {
   const router = useRouter()
-  const { currentUser } = useAppStore()
+  const { user: currentUser } = useAuth()
   const [assignments, setAssignments] = useState<Assignment[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchAssignments = async () => {
-      if (!currentUser?._id) {
+      if (!currentUser?.id) {
         return
       }
       setLoading(true)
       setError(null)
       try {
         const response = await api.get(
-          `/teacher/assignments/teacher/${currentUser._id}`
+          `/teacher/assignments/teacher/${currentUser.id}`
         )
         if (response.status === 200) {
           setAssignments(response.data)
@@ -51,7 +51,7 @@ const AssignmentListPage = () => {
     }
 
     fetchAssignments()
-  }, [currentUser?._id])
+  }, [currentUser?.id])
 
   const getAssignmentStatus = (dueDate: string): "Upcoming" | "Overdue" => {
     const dueDateObj = new Date(dueDate)

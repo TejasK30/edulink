@@ -1,4 +1,3 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import api from "@/lib/api"
 import {
   Course,
@@ -7,46 +6,78 @@ import {
   Semester,
   Teacher,
 } from "@/types/course.types"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
-export const useCoursesData = (collegeId: string | undefined) => {
+export const useDepartments = (collegeId: string | undefined) => {
   return useQuery({
-    queryKey: ["courses-data", collegeId],
+    queryKey: ["departments", collegeId],
     queryFn: async () => {
-      if (!collegeId) throw new Error("College ID is required")
-
-      const [deptRes, semRes, teacherRes, courseRes] = await Promise.all([
-        api.get(`/auth/colleges/${collegeId}/departments`),
-        api.get(`/admin/colleges/${collegeId}/semesters`),
-        api.get("/users", { params: { role: "teacher", collegeId } }),
-        api.get(`/courses/college/${collegeId}`),
-      ])
-
-      const departments: Department[] = deptRes.data
-      const semesters: Semester[] = semRes.data
-      const teachers: Teacher[] = teacherRes.data
-
-      const enhancedCourses: Course[] = courseRes.data.map((course: Course) => {
-        const dept = departments.find((d) => d._id === course.departmentId)
-        const sem = semesters.find((s) => s._id === course.semesterId)
-        const teacher = teachers.find((t) => t._id === course.teacherId)
-
-        return {
-          ...course,
-          departmentName: dept?.name || "Unknown",
-          semesterName: sem ? `${sem.name} ${sem.year}` : "Unknown",
-          teacherName: teacher?.name || "Not Assigned",
-        }
-      })
-
-      return {
-        departments,
-        semesters,
-        teachers,
-        courses: enhancedCourses,
-      }
+      const response = await api.get(`/courses/departments/${collegeId}`)
+      return response.data.data as Department[]
     },
     enabled: !!collegeId,
   })
+}
+
+export const useSemesters = (collegeId: string | undefined) => {
+  return useQuery({
+    queryKey: ["semesters", collegeId],
+    queryFn: async () => {
+      const response = await api.get(`/courses/semesters/${collegeId}`)
+
+      return response.data as Semester[]
+    },
+    enabled: !!collegeId,
+  })
+}
+
+export const useTeachers = (collegeId: string | undefined) => {
+  return useQuery({
+    queryKey: ["teachers", collegeId],
+    queryFn: async () => {
+      const response = await api.get("/courses/users", {
+        params: {
+          role: "teacher",
+          collegeId,
+        },
+      })
+      console.log("hook teachers response: ", response.data)
+      return response.data as Teacher[]
+    },
+    enabled: !!collegeId,
+  })
+}
+
+export const useCourses = (collegeId: string | undefined) => {
+  return useQuery({
+    queryKey: ["courses", collegeId],
+    queryFn: async () => {
+      const response = await api.get(`/courses/college-courses/${collegeId}`)
+      return response.data as Course[]
+    },
+    enabled: !!collegeId,
+  })
+}
+
+export const useCoursesData = (collegeId: string | undefined) => {
+  const departments = useDepartments(collegeId)
+  const semesters = useSemesters(collegeId)
+  const teachers = useTeachers(collegeId)
+  const courses = useCourses(collegeId)
+
+  return {
+    departments: departments.data || [],
+    semesters: semesters.data || [],
+    teachers: teachers.data || [],
+    courses: courses.data || [],
+    isLoading:
+      departments.isLoading ||
+      semesters.isLoading ||
+      teachers.isLoading ||
+      courses.isLoading,
+    error:
+      departments.error || semesters.error || teachers.error || courses.error,
+  }
 }
 
 export const useCreateCourse = () => {
@@ -54,15 +85,18 @@ export const useCreateCourse = () => {
 
   return useMutation({
     mutationFn: async (data: CourseFormSchemaType & { collegeId: string }) => {
-      const response = await api.post("/api/courses", {
-        ...data,
+      const { collegeId, ...rest } = data
+
+      const response = await api.post(`/courses/create/${collegeId}`, {
+        ...rest,
         credits: parseInt(data.credits),
         teacherId: data.teacherId === "abcde" ? null : data.teacherId,
       })
+
       return response.data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["courses-data"] })
+      queryClient.invalidateQueries({ queryKey: ["courses"] })
     },
   })
 }

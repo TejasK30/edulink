@@ -1,6 +1,5 @@
 "use client"
 
-import { useAppStore } from "@/lib/store"
 import { zodResolver } from "@hookform/resolvers/zod"
 import axios from "axios"
 import { useState } from "react"
@@ -19,6 +18,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useAuth } from "@/lib/auth-provider"
 import { toast } from "sonner"
 
 const userFormSchema = z.object({
@@ -38,7 +38,7 @@ interface UserFormProps {
 
 const UserForm: React.FC<UserFormProps> = ({ role }) => {
   const [action, setAction] = useState<"create" | "update" | "delete">("create")
-  const { currentUser } = useAppStore()
+  const { user: currentUser } = useAuth()
 
   const form = useForm<UserFormInputs>({
     resolver: zodResolver(userFormSchema),
@@ -59,55 +59,31 @@ const UserForm: React.FC<UserFormProps> = ({ role }) => {
             role,
             college: currentUser?.collegeId,
           })
-          toast({
-            title: "Success",
-            description: "User created successfully.",
-            variant: "default",
-          })
+          toast("User created successfully.")
           break
         case "update":
           if (!data.userId) {
-            toast({
-              title: "Error",
-              description: "User ID is required for update.",
-              variant: "destructive",
-            })
+            toast("Error: User ID is required for update.destructive")
             return
           }
           await axios.put(`/api/users/${data.userId}`, {
             ...data,
             role,
           })
-          toast({
-            title: "Success",
-            description: "User updated successfully.",
-            variant: "default",
-          })
+          toast("User updated successfully.")
           break
         case "delete":
           if (!data.userId) {
-            toast({
-              title: "Error",
-              description: "User ID is required for deletion.",
-              variant: "destructive",
-            })
+            toast("Error: User ID is required for deletion.")
             return
           }
           await axios.delete(`/api/users/${data.userId}`)
-          toast({
-            title: "Success",
-            description: "User deleted successfully.",
-            variant: "default",
-          })
+          toast("User deleted successfully.")
           break
       }
       form.reset()
     } catch (err: any) {
-      toast({
-        title: "Error",
-        description: err.response?.data?.message || "An error occurred.",
-        variant: "destructive",
-      })
+      toast(`${err.response?.data?.message || "|| An error occurred."}`)
     }
   }
 

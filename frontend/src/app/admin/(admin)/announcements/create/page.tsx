@@ -44,11 +44,11 @@ export default function CreateAnnouncementForm() {
     mutationFn: async (values: zod.infer<typeof announcementFormSchema>) => {
       const payload = {
         ...values,
-        collegeId: user.collegeId,
-        authorId: user.id,
-        authorRole: user.role === "admin" ? "admin" : "teacher",
+        collegeId: user?.collegeId,
+        authorId: user?.id,
+        authorRole: user?.role === "admin" ? "admin" : "teacher",
       }
-      const response = await api.post(`/announcements/${user.id}`, payload)
+      const response = await api.post(`/announcements/${user?.id}`, payload)
       if (!response.data.success) {
         throw new Error(response.data.message || "Unknown error")
       }

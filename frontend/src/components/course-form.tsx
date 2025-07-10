@@ -32,7 +32,7 @@ const courseFormSchema = z.object({
 
 interface CourseFormDialogProps {
   open: boolean
-  mode: "add" | "edit"
+  mode: "add" | "edit" | "view" // ✅ added view
   initialData?: CourseFormData
   onClose: () => void
   onSubmit: (data: CourseFormData) => Promise<void>
@@ -70,15 +70,25 @@ const CourseFormDialog: React.FC<CourseFormDialogProps> = ({
     }
   }, [initialData, form])
 
+  const isViewMode = mode === "view"
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>
-            {mode === "add" ? "Add New Course" : "Edit Course"}
+            {mode === "add"
+              ? "Add New Course"
+              : mode === "edit"
+              ? "Edit Course"
+              : "Course Details"}
           </DialogTitle>
           <DialogDescription>
-            {mode === "add" ? "Create a new course" : "Update course details"}
+            {mode === "add"
+              ? "Create a new course"
+              : mode === "edit"
+              ? "Update course details"
+              : "View course information"}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -90,7 +100,11 @@ const CourseFormDialog: React.FC<CourseFormDialogProps> = ({
                 <FormItem>
                   <FormLabel>Course Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter course name" {...field} />
+                    <Input
+                      placeholder="Enter course name"
+                      {...field}
+                      disabled={isViewMode}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -103,7 +117,11 @@ const CourseFormDialog: React.FC<CourseFormDialogProps> = ({
                 <FormItem>
                   <FormLabel>Course Code</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter course code" {...field} />
+                    <Input
+                      placeholder="Enter course code"
+                      {...field}
+                      disabled={isViewMode}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -120,6 +138,8 @@ const CourseFormDialog: React.FC<CourseFormDialogProps> = ({
                       type="number"
                       placeholder="Enter credits"
                       {...field}
+                      onChange={(e) => field.onChange(Number(e.target.value))}
+                      disabled={isViewMode}
                     />
                   </FormControl>
                   <FormMessage />
@@ -133,7 +153,11 @@ const CourseFormDialog: React.FC<CourseFormDialogProps> = ({
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter description" {...field} />
+                    <Input
+                      placeholder="Enter description"
+                      {...field}
+                      disabled={isViewMode}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -141,11 +165,13 @@ const CourseFormDialog: React.FC<CourseFormDialogProps> = ({
             />
             <DialogFooter className="sm:justify-start">
               <Button type="button" variant="secondary" onClick={onClose}>
-                Cancel
+                {isViewMode ? "Close" : "Cancel"}
               </Button>
-              <Button type="submit">
-                {mode === "add" ? "Create" : "Save Changes"}
-              </Button>
+              {!isViewMode && (
+                <Button type="submit">
+                  {mode === "add" ? "Create" : "Save Changes"}
+                </Button>
+              )}
             </DialogFooter>
           </form>
         </Form>

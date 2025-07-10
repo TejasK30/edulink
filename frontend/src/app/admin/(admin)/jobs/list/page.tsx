@@ -28,7 +28,7 @@ const AdminJobsList = () => {
     enabled: !!user?.collegeId,
     queryKey: ["jobs", user?.collegeId],
     queryFn: async () => {
-      const res = await api.get(`/student/jobs/${user?.collegeId}`)
+      const res = await api.get(`/admin/jobs/${user?.collegeId}`)
       return res.data
     },
   })

@@ -9,7 +9,7 @@ export const useDepartments = (collegeId?: string) =>
     queryKey: ["departments", collegeId],
     queryFn: async () => {
       const res = await api.get(`/auth/colleges/${collegeId}/departments`)
-      return res.data
+      return res.data.data
     },
   })
 
@@ -28,7 +28,7 @@ export const useToggleSemester = () => {
 
   return useMutation({
     mutationFn: async ({ id, current }: { id: string; current: boolean }) => {
-      await api.patch(`/semesters/${id}`, { isActive: !current })
+      await api.patch(`/courses/semesters/${id}`, { isActive: !current })
     },
     onSuccess: () => {
       toast.success("Semester status updated")

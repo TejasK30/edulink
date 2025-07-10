@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import api from "@/lib/api"
-import { useAppStore } from "@/lib/store"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
@@ -15,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useAuth } from "@/lib/auth-provider"
 
 interface Course {
   _id: string
@@ -23,7 +23,7 @@ interface Course {
 }
 
 export default function CreateAssignmentPage() {
-  const { currentUser } = useAppStore()
+  const { user: currentUser } = useAuth()
   const router = useRouter()
   const [teacherCourses, setTeacherCourses] = useState<Course[]>([])
   const [selectedCourse, setSelectedCourse] = useState<string>("")
@@ -34,8 +34,8 @@ export default function CreateAssignmentPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
-    if (!currentUser || !currentUser._id) return
-    const teacherId = currentUser._id
+    if (!currentUser || !currentUser.id) return
+    const teacherId = currentUser.id
     const fetchCourses = async () => {
       try {
         const response = await api.get(
@@ -62,7 +62,7 @@ export default function CreateAssignmentPage() {
       !assignmentName ||
       questions.some((q) => !q) ||
       !dueDate ||
-      !currentUser?._id
+      !currentUser?.id
     ) {
       toast("Please fill in all required fields.")
       return
@@ -77,7 +77,7 @@ export default function CreateAssignmentPage() {
         questions,
         dueDate,
       }
-      const teacherId = currentUser._id
+      const teacherId = currentUser.id
       const response = await api.post(
         `/assignments/teacher/${teacherId}`,
         payload

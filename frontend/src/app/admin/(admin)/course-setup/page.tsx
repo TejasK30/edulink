@@ -13,18 +13,8 @@ export default function CoursesPage() {
   const { user } = useAuth()
   const collegeId = user?.collegeId
 
-  const { data: coursesData, isLoading, error } = useCoursesData(collegeId)
-
-  if (!collegeId) {
-    toast.error("College ID is missing.")
-    return (
-      <div className="container mx-auto py-6">
-        <div className="text-center text-red-600">
-          College ID is missing. Please check your account settings.
-        </div>
-      </div>
-    )
-  }
+  const { departments, semesters, teachers, courses, isLoading, error } =
+    useCoursesData(collegeId)
 
   if (isLoading) {
     return (
@@ -45,16 +35,6 @@ export default function CoursesPage() {
     )
   }
 
-  if (!coursesData) {
-    return (
-      <div className="container mx-auto py-6">
-        <div className="text-center">No data available.</div>
-      </div>
-    )
-  }
-
-  const { departments, semesters, teachers, courses } = coursesData
-
   const handleEdit = (course: Course) => {
     setEditingCourse(course)
   }
@@ -70,7 +50,7 @@ export default function CoursesPage() {
           departments={departments}
           semesters={semesters}
           teachers={teachers}
-          collegeId={collegeId}
+          collegeId={collegeId!}
           editingCourse={editingCourse}
           onEditComplete={handleEditComplete}
         />

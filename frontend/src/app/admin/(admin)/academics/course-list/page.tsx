@@ -11,6 +11,7 @@ import { useAuth } from "@/lib/auth-provider"
 import { Course } from "@/lib/types"
 import { useQuery } from "@tanstack/react-query"
 import { Plus, Search } from "lucide-react"
+import { toast } from "sonner"
 
 const fetchCourses = async (collegeId: string): Promise<Course[]> => {
   const response = await api.get(`/courses/college/${collegeId}`)
@@ -20,8 +21,9 @@ const fetchCourses = async (collegeId: string): Promise<Course[]> => {
 const AdminCoursesPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("")
   const [formOpen, setFormOpen] = useState(false)
-  const [formMode, setFormMode] = useState<"add" | "edit">("add")
+  const [formMode, setFormMode] = useState<"add" | "edit" | "view">("add")
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null)
+  const [viewedCourse, setViewedCourse] = useState<Course | null>(null)
 
   const { user, isLoading: authLoading } = useAuth()
 
@@ -42,6 +44,10 @@ const AdminCoursesPage: React.FC = () => {
       course.code.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
+  const handleView = (course: Course) => {
+    setViewedCourse(course)
+  }
+
   const handleAddOpen = () => {
     setFormMode("add")
     setSelectedCourse(null)
@@ -57,17 +63,19 @@ const AdminCoursesPage: React.FC = () => {
   const handleFormSubmit = async (data: Partial<Course>) => {
     try {
       if (formMode === "add") {
-        const response = await api.post(`/courses`, {
-          ...data,
-          collegeId: user!.collegeId,
-        })
+        const response = await api.post(
+          `/courses/create/${user?.collegeId}`,
+          data
+        )
         if (response.status === 201) {
+          toast("Course Added successfully!")
           setFormOpen(false)
           refetch()
         }
       } else if (formMode === "edit" && selectedCourse) {
         const response = await api.put(`/courses/${selectedCourse._id}`, data)
         if (response.status === 200) {
+          toast("Course edited successfully!")
           setFormOpen(false)
           refetch()
         }
@@ -75,6 +83,10 @@ const AdminCoursesPage: React.FC = () => {
     } catch (err) {
       console.error("Error submitting course", err)
     }
+  }
+
+  const handleViewClose = () => {
+    setViewedCourse(null)
   }
 
   if (authLoading) return <p>Loading user...</p>
@@ -110,7 +122,7 @@ const AdminCoursesPage: React.FC = () => {
             <CourseTable
               courses={filteredCourses}
               onEdit={handleEditOpen}
-              onView={() => {}}
+              onView={handleView}
             />
           </CardContent>
         </Card>
@@ -123,6 +135,16 @@ const AdminCoursesPage: React.FC = () => {
         onClose={() => setFormOpen(false)}
         onSubmit={handleFormSubmit}
       />
+
+      {viewedCourse && (
+        <CourseFormDialog
+          open={!!viewedCourse}
+          mode="view"
+          initialData={viewedCourse}
+          onClose={handleViewClose}
+          onSubmit={async () => {}} // No-op
+        />
+      )}
     </div>
   )
 }

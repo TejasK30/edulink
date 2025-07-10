@@ -4,7 +4,7 @@ import FeePaymentForm from "@/components/feePayment"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { feeApi } from "@/lib/api"
-import { useAppStore } from "@/lib/store"
+import { useAuth } from "@/lib/auth-provider"
 import { Check } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
@@ -13,7 +13,7 @@ export default function FeePaymentPage() {
   const router = useRouter()
   const [paymentSuccess, setPaymentSuccess] = useState(false)
   const [paymentId, setPaymentId] = useState<string | null>(null)
-  const { currentUser } = useAppStore()
+  const { user: currentUser } = useAuth()
 
   const handlePaymentSuccess = (id: string) => {
     setPaymentId(id)
@@ -56,7 +56,7 @@ export default function FeePaymentPage() {
         </div>
       ) : (
         <FeePaymentForm
-          userId={currentUser?._id as string}
+          userId={currentUser?.id as string}
           onPaymentSuccess={handlePaymentSuccess}
         />
       )}

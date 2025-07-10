@@ -15,6 +15,7 @@ export type Semester = {
 export type Teacher = {
   _id: string
   name: string
+  email: string
 }
 
 export type Course = {

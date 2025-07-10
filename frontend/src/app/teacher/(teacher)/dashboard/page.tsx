@@ -1,8 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { dashboardService } from "@/lib/dashboard-service"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -11,7 +10,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Progress } from "@/components/ui/progress"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
   TableBody,
@@ -20,21 +20,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useAuth } from "@/lib/auth-provider"
+import { dashboardService } from "@/services/dashboardService"
 import {
+  AlertCircleIcon,
+  BookOpenIcon,
+  BriefcaseIcon,
   CalendarIcon,
   GraduationCapIcon,
-  BookOpenIcon,
-  UserCheckIcon,
-  BriefcaseIcon,
-  AlertCircleIcon,
-  UsersIcon,
   PlusIcon,
+  UserCheckIcon,
+  UsersIcon,
 } from "lucide-react"
-import { Progress } from "@/components/ui/progress"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
-import { useAppStore } from "@/lib/store"
+import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
 
 interface TeacherInfo {
   name: string
@@ -121,7 +121,7 @@ const TeacherDashboard = () => {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
-  const { currentUser } = useAppStore()
+  const { user: currentUser } = useAuth()
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -134,7 +134,7 @@ const TeacherDashboard = () => {
         }
 
         const response = await dashboardService.getTeacherDashboard(
-          currentUser._id as string
+          currentUser.id as string
         )
         setDashboardData(response.data)
       } catch (err) {

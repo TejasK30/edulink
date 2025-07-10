@@ -1,16 +1,16 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import api from "@/lib/api"
-import { toast } from "sonner"
 import JobListing, { JobPosting } from "@/components/JobListing"
-import { useAppStore } from "@/lib/store"
+import api from "@/lib/api"
+import { useAuth } from "@/lib/auth-provider"
 import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
+import { toast } from "sonner"
 
 const TeacherJobsListPage = () => {
   const [jobs, setJobs] = useState<JobPosting[]>([])
   const [hasMounted, setHasMounted] = useState(false)
-  const { currentUser } = useAppStore()
+  const { user: currentUser } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
@@ -26,10 +26,10 @@ const TeacherJobsListPage = () => {
 
   useEffect(() => {
     const fetchJobs = async () => {
-      if (currentUser?.collegeid) {
+      if (currentUser?.collegeId) {
         try {
           const response = await api.get(
-            `/student/jobs/${currentUser.collegeid}`
+            `/student/jobs/${currentUser.collegeId}`
           )
           setJobs(response.data)
         } catch (error: any) {

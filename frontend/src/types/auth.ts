@@ -36,4 +36,5 @@ export type AuthContextType = {
   isLoading: boolean
   isError?: boolean
   error?: unknown
+  logout: () => Promise<void>
 }

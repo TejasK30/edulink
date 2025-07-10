@@ -17,10 +17,6 @@ export default function AnnouncementsPage() {
   const { user, isLoading: userLoading } = useAuth()
   const [activeTab, setActiveTab] = useState<string>("all")
 
-  console.log("auth hook user:", user)
-
-  const isUserReady = !userLoading && !!user?.collegeId
-
   const {
     data: announcements = [],
     isLoading,
@@ -29,7 +25,7 @@ export default function AnnouncementsPage() {
     error,
   } = useQuery<Announcement[], Error>({
     queryKey: ["announcements", user?.collegeId, activeTab],
-    enabled: isUserReady,
+    enabled: !!user?.id,
     queryFn: async () => {
       if (!user?.collegeId) {
         throw new Error("User college ID not available")

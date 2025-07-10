@@ -1,16 +1,16 @@
 "use client"
 
-import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import Link from "next/link"
-import { Menu, ArrowRight } from "lucide-react"
+import { useAuth } from "@/lib/auth-provider"
 import { NAVIGATION } from "@/lib/constants"
+import { ArrowRight, Menu } from "lucide-react"
+import Link from "next/link"
+import { useState } from "react"
 import ThemeToggle from "./theme-toggle"
-import { useAppStore } from "@/lib/store"
 
 const Navbar: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const { currentUser } = useAppStore()
+  const { user: currentUser } = useAuth()
 
   return (
     <nav className="fixed top-0 left-0 w-full bg-background/80 backdrop-blur-md z-50">

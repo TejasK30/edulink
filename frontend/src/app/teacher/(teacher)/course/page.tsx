@@ -14,8 +14,8 @@ import {
 } from "@/components/ui/select"
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
-import { useAppStore } from "@/lib/store"
 import api from "@/lib/api"
+import { useAuth } from "@/lib/auth-provider"
 
 export default function AssignCoursePage() {
   const [departments, setDepartments] = useState<Department[]>([])
@@ -25,13 +25,13 @@ export default function AssignCoursePage() {
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
   const router = useRouter()
-  const { currentUser } = useAppStore()
+  const { user: currentUser } = useAuth()
 
   useEffect(() => {
     console.log("Current user:", currentUser)
   }, [currentUser])
 
-  const teacherId = currentUser?._id || localStorage.getItem("teacherId")
+  const teacherId = currentUser?.id || localStorage.getItem("teacherId")
 
   useEffect(() => {
     const fetchDepartments = async () => {
