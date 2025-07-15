@@ -10,9 +10,9 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { feeApi } from "@/lib/api"
-import { useAuth } from "@/lib/auth-provider"
+import { useAuth } from "@/lib/providers/auth-provider"
 import { formatCurrency } from "@/lib/types"
+import { feeApi } from "@/services/fee"
 import { Loader2 } from "lucide-react"
 import { useEffect, useState } from "react"
 import {

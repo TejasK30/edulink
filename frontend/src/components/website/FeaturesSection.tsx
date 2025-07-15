@@ -1,5 +1,5 @@
 import TitleSection from "./title-section"
-import Navbar from "@/components/Navbar"
+import Navbar from "@/components/website/Navbar"
 import { FEATURES } from "@/lib/constants"
 import { ArrowRight } from "lucide-react"
 

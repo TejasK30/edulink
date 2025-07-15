@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { useAuth } from "@/lib/auth-provider"
+import { useAuth } from "@/lib/providers/auth-provider"
 import { NAVIGATION } from "@/lib/constants"
 import { ArrowRight, Menu } from "lucide-react"
 import Link from "next/link"

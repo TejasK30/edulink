@@ -38,12 +38,8 @@ import {
   useUpdateUser,
   useUserDetails,
 } from "@/hooks/useUserActions"
-import { useAuth } from "@/lib/auth-provider"
-import {
-  User,
-  userFormSchema,
-  UserFormValues,
-} from "@/lib/schemas/users.schema"
+import { useAuth } from "@/lib/providers/auth-provider"
+import { User, userFormSchema, UserFormValues } from "@/lib/schemas/user.schema"
 import { UserForm } from "./admin/users/UserForm"
 import { UserProfile } from "./admin/users/UserProfile"
 
@@ -110,7 +106,7 @@ const UserListPage: React.FC<UserListPageProps> = ({ role, users }) => {
     setSelectedUser(user)
     setEditDialogOpen(true)
     form.reset({
-      _id: user._id,
+      userId: user._id,
       name: user.name,
       email: user.email,
       password: "",

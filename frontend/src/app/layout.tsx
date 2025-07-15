@@ -1,11 +1,11 @@
-import { ThemeProvider } from "@/lib/next-theme-provider"
-import { AuthProvider } from "@/lib/auth-provider"
+import { ThemeProvider } from "@/lib/providers/next-theme-provider"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import { twMerge } from "tailwind-merge"
 import "./globals.css"
 import { Toaster } from "@/components/ui/sonner"
-import { QueryProvider } from "@/lib/query-provider"
+import { QueryProvider } from "@/lib/providers/query-provider"
+import { AuthProvider } from "@/lib/providers/auth-provider"
 
 const inter = Inter({
   subsets: ["latin"],

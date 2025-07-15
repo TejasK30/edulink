@@ -1,6 +1,6 @@
 "use client"
 
-import FeeVisualization from "@/components/FeeVisualization"
+import FeeVisualization from "@/components/finance/FeeVisualization"
 
 export default function FeeVisualizationPage() {
   return (

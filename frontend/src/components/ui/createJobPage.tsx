@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import api from "@/lib/api"
-import { useAuth } from "@/lib/auth-provider"
+import { useAuth } from "@/lib/providers/auth-provider"
 import { jobSchema } from "@/lib/schemas/job.schema"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation } from "@tanstack/react-query"

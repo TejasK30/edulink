@@ -18,17 +18,9 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useAuth } from "@/lib/auth-provider"
+import { useAuth } from "@/lib/providers/auth-provider"
 import { toast } from "sonner"
-
-const userFormSchema = z.object({
-  userId: z.string().optional(),
-  name: z.string().min(2, { message: "Name must be at least 2 characters." }),
-  email: z.string().email({ message: "Invalid email address." }),
-  password: z
-    .string()
-    .min(6, { message: "Password must be at least 6 characters." }),
-})
+import { userFormSchema } from "@/lib/schemas/user.schema"
 
 type UserFormInputs = z.infer<typeof userFormSchema>
 

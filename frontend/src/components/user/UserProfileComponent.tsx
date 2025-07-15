@@ -27,6 +27,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import api from "@/lib/api"
 import { User } from "@/lib/store"
+import { getInitials } from "@/lib/utils"
 import {
   ArrowLeft,
   BookOpen,
@@ -163,13 +164,6 @@ const UserProfilePage = () => {
       month: "long",
       day: "numeric",
     })
-  }
-
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
   }
 
   const calculateAttendancePercentage = () => {

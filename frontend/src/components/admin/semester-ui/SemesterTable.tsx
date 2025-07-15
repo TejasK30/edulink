@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table"
 import { Switch } from "@/components/ui/switch"
 import { useSemesters, useToggleSemester } from "@/hooks/useSemester"
-import { useAuth } from "@/lib/auth-provider"
+import { useAuth } from "@/lib/providers/auth-provider"
 
 export function SemesterTable() {
   const { user } = useAuth()

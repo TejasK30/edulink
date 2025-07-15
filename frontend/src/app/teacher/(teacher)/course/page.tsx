@@ -15,7 +15,7 @@ import {
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import api from "@/lib/api"
-import { useAuth } from "@/lib/auth-provider"
+import { useAuth } from "@/lib/providers/auth-provider"
 
 export default function AssignCoursePage() {
   const [departments, setDepartments] = useState<Department[]>([])

@@ -19,20 +19,12 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
 import { CourseFormData } from "@/lib/types"
-
-const courseFormSchema = z.object({
-  _id: z.string().optional(),
-  name: z.string().min(1, { message: "Course name is required" }),
-  code: z.string().min(1, { message: "Course code is required" }),
-  credits: z.number().min(1, { message: "Credits must be at least 1" }),
-  description: z.string().optional(),
-})
+import { courseFormDialogSchema } from "@/lib/schemas/course.schema"
 
 interface CourseFormDialogProps {
   open: boolean
-  mode: "add" | "edit" | "view" // ✅ added view
+  mode: "add" | "edit" | "view"
   initialData?: CourseFormData
   onClose: () => void
   onSubmit: (data: CourseFormData) => Promise<void>
@@ -46,7 +38,7 @@ const CourseFormDialog: React.FC<CourseFormDialogProps> = ({
   onSubmit,
 }) => {
   const form = useForm<CourseFormData>({
-    resolver: zodResolver(courseFormSchema),
+    resolver: zodResolver(courseFormDialogSchema),
     defaultValues: {
       _id: "",
       name: "",

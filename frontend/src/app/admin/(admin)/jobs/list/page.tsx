@@ -7,7 +7,7 @@ import { toast } from "sonner"
 import api from "@/lib/api"
 import JobListing, { JobPosting } from "@/components/JobListing"
 import { Loader2 } from "lucide-react"
-import { useAuth } from "@/lib/auth-provider"
+import { useAuth } from "@/lib/providers/auth-provider"
 
 const AdminJobsList = () => {
   const { user } = useAuth()

@@ -1,8 +1,8 @@
 "use client"
 
-import FeaturesSection from "@/components/FeaturesSection"
+import FeaturesSection from "@/components/website/FeaturesSection"
 import HeroSection from "@/components/HeroSection"
-import Navbar from "@/components/Navbar"
+import Navbar from "@/components/website/Navbar"
 import TestimonialsSection from "@/components/TestimonialsSection"
 import { useEffect } from "react"
 const HomePage = () => {

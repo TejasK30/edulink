@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import api from "@/lib/api"
-import { useAuth } from "@/lib/auth-provider"
+import { register } from "@/services/auth"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
@@ -51,7 +51,6 @@ interface StudentTeacherRegistrationFormProps {
 export function StudentTeacherRegistrationForm({
   onBack,
 }: StudentTeacherRegistrationFormProps) {
-  const { register } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [colleges, setColleges] = useState<
     { _id: string; collegeName: string }[]

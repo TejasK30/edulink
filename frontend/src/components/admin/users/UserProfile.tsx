@@ -1,4 +1,4 @@
-import { DetailedUser } from "@/lib/schemas/users.schema"
+import { DetailedUser } from "@/lib/schemas/user.schema"
 import React from "react"
 
 interface UserProfileProps {

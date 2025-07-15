@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query"
 import { AxiosError } from "axios"
 import { Loader2 } from "lucide-react"
 import api from "@/lib/api"
-import { useAuth } from "@/lib/auth-provider"
+import { useAuth } from "@/lib/providers/auth-provider"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import {
   Card,

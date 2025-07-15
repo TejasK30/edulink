@@ -10,23 +10,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-
 import { Input } from "@/components/ui/input"
-
 import { ScrollArea } from "@/components/ui/scroll-area"
-
 import { cn } from "@/lib/utils"
-
 import { AnimatePresence, motion } from "framer-motion"
-
 import { Loader2, MessageSquare, SendHorizonal, X } from "lucide-react"
-
 import React, { useEffect, useRef, useState } from "react"
-
 import "dotenv/config"
-
-import { useAuth } from "@/lib/auth-provider"
 import axios from "axios"
+import { useAuth } from "@/lib/providers/auth-provider"
 
 interface Message {
   id: string

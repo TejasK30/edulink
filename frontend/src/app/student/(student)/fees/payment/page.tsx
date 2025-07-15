@@ -1,10 +1,10 @@
 "use client"
 
-import FeePaymentForm from "@/components/feePayment"
+import FeePaymentForm from "@/components/finance/feePayment"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
-import { feeApi } from "@/lib/api"
-import { useAuth } from "@/lib/auth-provider"
+import { useAuth } from "@/lib/providers/auth-provider"
+import { feeApi } from "@/services/fee"
 import { Check } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useState } from "react"

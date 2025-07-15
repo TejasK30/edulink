@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import api from "@/lib/api"
-import { useAuth } from "@/lib/auth-provider"
+import { useAuth } from "@/lib/providers/auth-provider"
 import { AssignmentPageCourse, AssignmentPageType } from "@/types/student.types"
 import { useQuery } from "@tanstack/react-query"
 import Link from "next/link"

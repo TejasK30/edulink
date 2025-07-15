@@ -26,7 +26,6 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
-import { feeApi } from "@/lib/api"
 import {
   FeeType,
   FeeTypeInfo,
@@ -38,38 +37,14 @@ import {
   PaymentDetails as PaymentDetailsType,
 } from "@/lib/types"
 import { AlertCircle, Loader2 } from "lucide-react"
-
-const feesSchema = z.object({
-  feeTypes: z
-    .array(z.string())
-    .min(1, { message: "Please select at least one fee type" }),
-  installmentOption: z.string().default("1"),
-})
-
-const cardPaymentSchema = z.object({
-  cardNumber: z.string().min(16).max(16),
-  cardHolderName: z.string().min(3),
-  expiryMonth: z.string().min(1),
-  expiryYear: z.string().min(1),
-  cvv: z.string().min(3).max(4),
-})
-
-const upiPaymentSchema = z.object({
-  upiId: z
-    .string()
-    .min(5)
-    .refine((v) => v.includes("@")),
-})
-
-const netBankingSchema = z.object({
-  bankCode: z.string().min(1),
-  username: z.string().min(3),
-})
-
-const walletSchema = z.object({
-  walletType: z.string().min(1),
-  mobileNumber: z.string().min(10),
-})
+import { feeApi } from "@/services/fee"
+import {
+  cardPaymentSchema,
+  feesSchema,
+  netBankingSchema,
+  upiPaymentSchema,
+  walletSchema,
+} from "@/lib/schemas/fee.schema"
 
 type FeeFormValues = z.infer<typeof feesSchema>
 type CardPaymentFormValues = z.infer<typeof cardPaymentSchema>

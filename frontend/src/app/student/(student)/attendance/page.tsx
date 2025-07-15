@@ -2,7 +2,7 @@
 "use client"
 
 import api from "@/lib/api"
-import { useAuth } from "@/lib/auth-provider"
+import { useAuth } from "@/lib/providers/auth-provider"
 import {
   AttendanceApiResponse,
   AttendanceRecord,

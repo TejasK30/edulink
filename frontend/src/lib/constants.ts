@@ -1,3 +1,7 @@
+/*
+Landing page constants data
+*/
+
 import { Feature, Testimonial, PricingPlan, NavigationItem } from "@/lib/types"
 
 export const FEATURES: Feature[] = [

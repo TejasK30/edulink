@@ -28,7 +28,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { CheckIcon, XIcon } from "lucide-react"
 import { toast } from "sonner"
 import api from "@/lib/api"
-import { useAuth } from "@/lib/auth-provider"
+import { useAuth } from "@/lib/providers/auth-provider"
 
 interface ICourse {
   _id: string

@@ -18,7 +18,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { feeApi } from "@/lib/api"
 import { AlertCircle, Download, ExternalLink, Loader2 } from "lucide-react"
 import {
   formatCurrency,
@@ -28,6 +27,7 @@ import {
   PaymentStatusLabels,
   FeeTypeLabels,
 } from "@/lib/types"
+import { feeApi } from "@/services/fee"
 
 interface PaymentHistoryTableProps {
   userId: string

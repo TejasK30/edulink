@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import api from "@/lib/api"
-import { useAuth } from "@/lib/auth-provider"
+import { useAuth } from "@/lib/providers/auth-provider"
 import { cn } from "@/lib/utils"
 import { format, isPast } from "date-fns"
 import { ArrowLeft, Eye, PlusCircle } from "lucide-react"

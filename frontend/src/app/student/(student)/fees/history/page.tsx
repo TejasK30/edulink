@@ -1,7 +1,7 @@
 "use client"
 
-import PaymentHistoryTable from "@/components/PaymentHistoryTable"
-import { useAuth } from "@/lib/auth-provider"
+import PaymentHistoryTable from "@/components/finance/PaymentHistoryTable"
+import { useAuth } from "@/lib/providers/auth-provider"
 
 export default function PaymentHistoryPage() {
   const { user: currentUser } = useAuth()

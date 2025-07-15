@@ -6,10 +6,10 @@ import {
   Book,
   Briefcase,
   Building2,
-  Check,
   DollarSign,
-  GraduationCap,
   School,
+  Settings,
+  User,
 } from "lucide-react"
 import React, { useEffect, useState } from "react"
 import { NavMain } from "./nav-main"
@@ -20,13 +20,12 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-} from "./ui/sidebar"
-import { useAppStore } from "@/lib/store"
+} from "../ui/sidebar"
 
-const TeacherNavItems = [
+const AdminNavItems = [
   {
     title: "Dashboard",
-    url: "/teacher/dashboard",
+    url: "/admin/dashboard",
     icon: BarChart2,
     isActive: true,
   },
@@ -34,45 +33,49 @@ const TeacherNavItems = [
     title: "Announcements",
     icon: AlertCircle,
     items: [
-      { title: "Create", url: "/teacher/announcements/create" },
-      { title: "Get", url: "/teacher/announcements/get" },
+      { title: "Create", url: "/admin/announcements/create" },
+      { title: "Get", url: "/admin/announcements/get" },
     ],
   },
   {
-    title: "Assignments",
-    icon: Book,
+    title: "Users",
+    icon: User,
     items: [
-      { title: "Create", url: "/teacher/assignments/create" },
-      { title: "List", url: "/teacher/assignments/list" },
+      { title: "Admin", url: "/admin/users/admin" },
+      { title: "Students", url: "/admin/users/students" },
+      { title: "Teacher", url: "/admin/users/teacher" },
     ],
-  },
-  {
-    title: "Attendance",
-    icon: Check,
-    items: [{ title: "Create", url: "/teacher/attendance/create" }],
-  },
-  {
-    title: "Course",
-    url: "/teacher/course",
-    icon: GraduationCap,
-  },
-  {
-    title: "Grading",
-    url: "/teacher/grade",
-    icon: GraduationCap,
   },
   {
     title: "Jobs",
     icon: Briefcase,
     items: [
-      { title: "Create", url: "/teacher/jobs/create" },
-      { title: "List", url: "/teacher/jobs/list" },
+      { title: "Create", url: "/admin/jobs/create" },
+      { title: "List", url: "/admin/jobs/list" },
     ],
   },
   {
     title: "Academics",
-    url: "/teacher/academics",
     icon: Book,
+    items: [{ title: "Course List", url: "/admin/academics/course-list" }],
+  },
+  {
+    title: "Finances",
+    icon: DollarSign,
+    items: [{ title: "All Fees", url: "/admin/finances" }],
+  },
+  {
+    title: "Feedback",
+    icon: AlertCircle,
+    items: [{ title: "Feedback Analytics", url: "/admin/feedback-analytics" }],
+  },
+  {
+    title: "Setup",
+    icon: Settings,
+    items: [
+      { title: "Course Setup", url: "/admin/course-setup" },
+      { title: "Semester Setup", url: "/admin/semester-setup" },
+    ],
   },
 ]
 
@@ -82,12 +85,12 @@ type Department = {
   plan: string
 }
 
-type TeacherSidebarProps = React.ComponentProps<typeof Sidebar> & {
-  teacherId?: string
+type AdminSidebarProps = React.ComponentProps<typeof Sidebar> & {
+  adminId?: string
   departments?: Department[]
 }
 
-type TeacherData = {
+type AdminData = {
   user: {
     name: string
     email: string
@@ -96,12 +99,11 @@ type TeacherData = {
   departments: Department[]
 }
 
-export default function TeacherSidebar({
-  teacherId,
+export default function AdminSidebar({
+  adminId,
   departments = [],
   ...props
-}: TeacherSidebarProps) {
-  const { currentUser } = useAppStore()
+}: AdminSidebarProps) {
   const defaultDepartments: Department[] = React.useMemo(() => {
     return departments.length
       ? departments
@@ -112,40 +114,39 @@ export default function TeacherSidebar({
         ]
   }, [departments])
 
-  const [teacherData, setTeacherData] = useState<TeacherData>({
+  const [adminData, setAdminData] = useState<AdminData>({
     user: {
-      name: currentUser?.name as string,
-      email: currentUser?.email as string,
+      name: "",
+      email: "",
       avatar: "/avatars/admin.jpg",
     },
-
     departments: defaultDepartments,
   })
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
-    if (!teacherId) return
-    const fetchTeacherData = async () => {
+    if (!adminId) return
+    const fetchAdminData = async () => {
       setIsLoading(true)
       try {
-        const res = await fetch(`/api/staff/${teacherId}`)
+        const res = await fetch(`/api/staff/${adminId}`)
         const data = await res.json()
-        setTeacherData({
+        setAdminData({
           user: {
             name: `${data.firstName} ${data.lastName}`,
             email: data.user.email,
-            avatar: "/avatars/teacher.jpg",
+            avatar: "/avatars/admin.jpg",
           },
           departments: departments.length ? departments : defaultDepartments,
         })
       } catch (err: unknown) {
-        console.error("Failed to fetch teacher data:", err)
+        console.error("Failed to fetch admin data:", err)
       } finally {
         setIsLoading(false)
       }
     }
-    fetchTeacherData()
-  }, [teacherId, departments, defaultDepartments])
+    fetchAdminData()
+  }, [adminId, departments, defaultDepartments])
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -153,14 +154,14 @@ export default function TeacherSidebar({
         {isLoading ? (
           <div className="text-sm text-gray-500">Loading...</div>
         ) : (
-          <TeamSwitcher teams={teacherData.departments} />
+          <TeamSwitcher teams={adminData.departments} />
         )}
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={TeacherNavItems} />
+        <NavMain items={AdminNavItems} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={teacherData.user} />
+        <NavUser user={adminData.user} />
       </SidebarFooter>
     </Sidebar>
   )

@@ -1,8 +1,6 @@
 import nodemailer from "nodemailer"
-import fs from "fs"
-import path from "path"
-import { UserModel } from "../models/user"
 import { IFeePayment } from "../models/FeePayment"
+import { UserModel } from "../models/user"
 import { getReceiptPath } from "./pdfGenerator"
 
 const createTransporter = () => {

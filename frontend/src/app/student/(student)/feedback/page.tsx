@@ -13,7 +13,7 @@ import {
 import { CollegeFeedbackSection } from "@/components/student/feedback/CollegeFeedback"
 import { TeacherFeedbackSection } from "@/components/student/feedback/TeacherFeedback"
 import { useFeedbackSubmission } from "@/hooks/useFeedback"
-import { useAuth } from "@/lib/auth-provider"
+import { useAuth } from "@/lib/providers/auth-provider"
 import { feedbackSchema } from "@/lib/schemas/feedback.schema"
 import { cn } from "@/lib/utils"
 import { ApiError, FeedbackFormValues } from "@/types/feedback.types"

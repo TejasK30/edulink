@@ -14,7 +14,7 @@ import {
 import React, { useEffect, useState } from "react"
 import { NavMain } from "./nav-main"
 import { NavUser } from "./nav-user"
-import { Sidebar, SidebarContent, SidebarFooter } from "./ui/sidebar"
+import { Sidebar, SidebarContent, SidebarFooter } from "../ui/sidebar"
 
 const StudentNavItems = [
   {

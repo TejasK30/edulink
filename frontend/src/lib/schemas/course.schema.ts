@@ -23,3 +23,11 @@ export const courseFormSchema = z.object({
   }),
   teacherId: z.string().nullable().optional(),
 })
+
+export const courseFormDialogSchema = z.object({
+  _id: z.string().optional(),
+  name: z.string().min(1, { message: "Course name is required" }),
+  code: z.string().min(1, { message: "Course code is required" }),
+  credits: z.number().min(1, { message: "Credits must be at least 1" }),
+  description: z.string().optional(),
+})

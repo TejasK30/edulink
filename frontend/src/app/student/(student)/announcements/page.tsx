@@ -7,7 +7,7 @@ import AnnouncementsList from "@/components/student/announcementpage/Announcemen
 import AnnouncementsSkeleton from "@/components/student/announcementpage/AnnouncementSkeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import api from "@/lib/api"
-import { useAuth } from "@/lib/auth-provider"
+import { useAuth } from "@/lib/providers/auth-provider"
 import { Announcement, PaginatedResponse } from "@/lib/types"
 import { keepPreviousData, useQuery } from "@tanstack/react-query"
 import { useEffect, useRef, useState } from "react"

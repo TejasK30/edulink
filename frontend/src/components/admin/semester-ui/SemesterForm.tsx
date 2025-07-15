@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/form"
 import { CalendarIcon } from "lucide-react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { useAuth } from "@/lib/auth-provider"
+import { useAuth } from "@/lib/providers/auth-provider"
 import { semesterFormSchema } from "@/lib/schemas/semster.schema"
 import { toast } from "sonner"
 import * as z from "zod"

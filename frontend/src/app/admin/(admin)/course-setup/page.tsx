@@ -3,7 +3,7 @@
 import CourseForm from "@/components/admin/course/courseForm"
 import CourseTable from "@/components/admin/course/courseTable"
 import { useCoursesData } from "@/hooks/useCourse"
-import { useAuth } from "@/lib/auth-provider"
+import { useAuth } from "@/lib/providers/auth-provider"
 import { Course } from "@/types/course.types"
 import { useState } from "react"
 import { toast } from "sonner"

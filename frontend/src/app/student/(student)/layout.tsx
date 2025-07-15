@@ -1,7 +1,7 @@
 "use client"
 
-import ChatbotButton from "@/components/ChatBotButton"
-import StudentSidebar from "@/components/studentSidebar"
+import ChatbotButton from "@/components/website/ChatBotButton"
+import StudentSidebar from "@/components/sidebar/studentSidebar"
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 
 export default function AdminLayout({

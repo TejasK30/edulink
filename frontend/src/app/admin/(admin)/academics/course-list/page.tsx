@@ -1,22 +1,18 @@
 "use client"
 
 import React, { useState } from "react"
-import CourseFormDialog from "@/components/course-form"
-import CourseTable from "@/components/course-table"
+import CourseFormDialog from "@/components/course/course-form"
+import CourseTable from "@/components/course/course-table"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import api from "@/lib/api"
-import { useAuth } from "@/lib/auth-provider"
+import { useAuth } from "@/lib/providers/auth-provider"
 import { Course } from "@/lib/types"
 import { useQuery } from "@tanstack/react-query"
 import { Plus, Search } from "lucide-react"
 import { toast } from "sonner"
-
-const fetchCourses = async (collegeId: string): Promise<Course[]> => {
-  const response = await api.get(`/courses/college/${collegeId}`)
-  return response.data
-}
+import { fetchCourses } from "@/services/courseService"
 
 const AdminCoursesPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("")

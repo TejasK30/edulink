@@ -4,8 +4,8 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useState } from "react"
-import { AdminRegistrationForm } from "@/components/admin-register"
-import { StudentTeacherRegistrationForm } from "@/components/studentandteacherregister"
+import { AdminRegistrationForm } from "@/components/auth/admin-register"
+import { StudentTeacherRegistrationForm } from "@/components/auth/studentandteacherregister"
 
 export default function RegisterPage() {
   const [registrationType, setRegistrationType] = useState<

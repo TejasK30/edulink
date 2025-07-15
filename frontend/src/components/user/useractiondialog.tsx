@@ -9,22 +9,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { useAuth } from "@/lib/providers/auth-provider"
+import { userFormSchema } from "@/lib/schemas/user.schema"
 import { zodResolver } from "@hookform/resolvers/zod"
 import axios from "axios"
 import { useEffect } from "react"
 import { SubmitHandler, useForm } from "react-hook-form"
 import { toast } from "sonner"
 import * as z from "zod"
-
-const userFormSchema = z.object({
-  userId: z.string().optional(),
-  name: z.string().min(2, { message: "Name must be at least 2 characters." }),
-  email: z.string().email({ message: "Invalid email address." }),
-  password: z
-    .string()
-    .min(6, { message: "Password must be at least 6 characters." })
-    .optional(),
-})
 
 type UserFormInputs = z.infer<typeof userFormSchema>
 
@@ -50,7 +42,6 @@ const UserActionDialog: React.FC<UserActionDialogProps> = ({
   user,
   action,
   role,
-  collegeId,
 }) => {
   const {
     register,

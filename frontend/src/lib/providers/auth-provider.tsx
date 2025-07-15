@@ -3,8 +3,8 @@
 import { AuthContextType } from "@/types/auth"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import React, { createContext, useContext } from "react"
-import api from "./api"
 import { useRouter } from "next/navigation"
+import api from "../api"
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 

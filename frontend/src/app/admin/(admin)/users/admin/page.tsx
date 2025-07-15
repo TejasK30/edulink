@@ -2,7 +2,7 @@
 
 import UserListPage from "@/components/userlist"
 import api from "@/lib/api"
-import { useAuth } from "@/lib/auth-provider"
+import { useAuth } from "@/lib/providers/auth-provider"
 import { useQuery } from "@tanstack/react-query"
 
 const AdminsListPage = () => {

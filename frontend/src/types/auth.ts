@@ -1,7 +1,5 @@
 import { User } from "@/lib/types"
 
-export type UserRoleType = "admin" | "teacher" | "student"
-
 export interface LoginResponse {
   success: boolean
   message: string
