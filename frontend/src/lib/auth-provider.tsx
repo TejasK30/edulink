@@ -31,14 +31,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     },
     retry: false,
-    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   })
 
   const logout = async () => {
     try {
       await api.post("/auth/logout")
       await queryClient.invalidateQueries({ queryKey: ["auth-get-user"] })
-      router.push("/login") // ✅ redirect after logout
+      router.push("/login")
     } catch (err) {
       console.error("Logout failed", err)
     }
