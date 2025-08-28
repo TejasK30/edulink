@@ -27,10 +27,9 @@ export const getStudentDashboard = async (
   res: Response
 ): Promise<any> => {
   try {
-    const { userId } = req.params
-
-    if (!(await validateUser(userId, UserRole.STUDENT))) {
-      return res.status(403).json({ message: "Unauthorized access" })
+    let userId
+    if (req.user) {
+      userId = req.user.id
     }
 
     const student = await User.findById(userId)
@@ -152,10 +151,10 @@ export const getTeacherDashboard = async (
   res: Response
 ): Promise<any> => {
   try {
-    const { userId } = req.params
+    let userId
 
-    if (!(await validateUser(userId, UserRole.TEACHER))) {
-      return res.status(403).json({ message: "Unauthorized access" })
+    if (req.user) {
+      userId = req.user.id
     }
 
     const teacher = await User.findById(userId)

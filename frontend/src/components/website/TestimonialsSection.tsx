@@ -1,6 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import TitleSection from "./website/title-section"
 import { TESTIMONIALS } from "@/lib/constants"
+import TitleSection from "./title-section"
 
 const TestimonialsSection = () => {
   return (

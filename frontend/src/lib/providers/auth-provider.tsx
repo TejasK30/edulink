@@ -23,8 +23,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("Fetching user profile...")
       try {
         const response = await api.get("/auth/profile/me")
-        console.log("User profile response:", response.data)
-        return response.data.user
+
+        console.log("auth get user: ", response.data)
+
+        return response.data
       } catch (error) {
         console.error("Error fetching user profile:", error)
         throw error

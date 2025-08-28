@@ -14,6 +14,7 @@ import { authenticate, authorizeRole } from "../middleware/auth"
 const router = express.Router()
 
 router.use(authenticate, authorizeRole("student"))
+
 router.post("/:studentId/enroll-all", bulkEnrollStudentInSemester)
 router.get("/:studentId/enrolled-courses", getEnrolledCourses)
 router.get("/assignments/:studentId", getStudentAssignments)

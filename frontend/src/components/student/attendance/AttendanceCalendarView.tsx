@@ -2,8 +2,12 @@ import { Calendar } from "@/components/ui/calendar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { format } from "date-fns"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { AttendanceRecord } from "@/types/student.types"
-import { filterRecords, mapDatesByStatus } from "@/utils/student.utils"
+import {
+  AttendanceRecord,
+  filterRecords,
+  mapDatesByStatus,
+} from "@/types/student.types"
+
 import { useState } from "react"
 
 interface Props {

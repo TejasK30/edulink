@@ -40,8 +40,8 @@ import {
 } from "@/hooks/useUserActions"
 import { useAuth } from "@/lib/providers/auth-provider"
 import { User, userFormSchema, UserFormValues } from "@/lib/schemas/user.schema"
-import { UserForm } from "./admin/users/UserForm"
-import { UserProfile } from "./admin/users/UserProfile"
+import { UserForm } from "../admin/users/UserForm"
+import { UserProfile } from "../admin/users/UserProfile"
 
 interface UserListPageProps {
   role: string

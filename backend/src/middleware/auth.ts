@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express"
 import jwt from "jsonwebtoken"
 import User from "../models/user"
+import { redis } from "../config/redis"
 
 export interface JwtPayload {
   id: string
@@ -23,17 +24,28 @@ export const authenticate = async (
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload
-    const user = await User.findById(decoded.id)
 
-    if (!user) {
-      return res.status(401).json({ message: "User not found" })
+    const cacheKey = `user:${decoded.id}`
+
+    let userData = await redis.get(cacheKey)
+
+    if (!userData) {
+      const user = await User.findById(decoded.id)
+
+      if (!user) {
+        return res.status(401).json({ message: "User not found" })
+      }
+
+      userData = JSON.stringify({
+        id: user.id,
+        role: user.role,
+        collegeId: user.college.toString(),
+      })
+
+      await redis.set(cacheKey, userData, "EX", 120)
     }
 
-    req.user = {
-      id: user.id,
-      role: user.role,
-      collegeId: user.college.toString(),
-    }
+    req.user = JSON.parse(userData)
 
     next()
   } catch (err) {
@@ -41,13 +53,18 @@ export const authenticate = async (
   }
 }
 
-export const authorizeRole = (
-  requiredRole: "admin" | "teacher" | "student"
-) => {
+type Role = "admin" | "teacher" | "student"
+
+export const authorizeRole = (requiredRoles: Role | Role[]) => {
   return (req: Request, res: Response, next: NextFunction): void => {
     try {
       if (req.user) {
-        if (req.user.role !== requiredRole) {
+        const userRole: Role = req.user.role as Role
+        const allowedRoles = Array.isArray(requiredRoles)
+          ? requiredRoles
+          : [requiredRoles]
+
+        if (!allowedRoles.includes(userRole)) {
           res
             .status(403)
             .json({ message: "Forbidden: insufficient privileges" })

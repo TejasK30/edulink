@@ -1,5 +1,6 @@
 "use client"
 
+import { useAuth } from "@/lib/providers/auth-provider"
 import {
   AlertCircle,
   BarChart2,
@@ -12,16 +13,15 @@ import {
   School,
 } from "lucide-react"
 import React, { useEffect, useState } from "react"
-import { NavMain } from "./nav-main"
-import { NavUser } from "./nav-user"
-import { TeamSwitcher } from "./team-switcher"
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
 } from "../ui/sidebar"
-import { useAppStore } from "@/lib/store"
+import { NavMain } from "./nav-main"
+import { NavUser } from "./nav-user"
+import { TeamSwitcher } from "./team-switcher"
 
 const TeacherNavItems = [
   {
@@ -83,7 +83,6 @@ type Department = {
 }
 
 type TeacherSidebarProps = React.ComponentProps<typeof Sidebar> & {
-  teacherId?: string
   departments?: Department[]
 }
 
@@ -97,11 +96,11 @@ type TeacherData = {
 }
 
 export default function TeacherSidebar({
-  teacherId,
   departments = [],
   ...props
 }: TeacherSidebarProps) {
-  const { currentUser } = useAppStore()
+  const { user: currentUser } = useAuth()
+
   const defaultDepartments: Department[] = React.useMemo(() => {
     return departments.length
       ? departments
@@ -114,47 +113,32 @@ export default function TeacherSidebar({
 
   const [teacherData, setTeacherData] = useState<TeacherData>({
     user: {
-      name: currentUser?.name as string,
-      email: currentUser?.email as string,
+      name: (currentUser?.name as string) || "Teacher User",
+      email: (currentUser?.email as string) || "teacher",
       avatar: "/avatars/admin.jpg",
     },
 
     departments: defaultDepartments,
   })
-  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
-    if (!teacherId) return
-    const fetchTeacherData = async () => {
-      setIsLoading(true)
-      try {
-        const res = await fetch(`/api/staff/${teacherId}`)
-        const data = await res.json()
-        setTeacherData({
-          user: {
-            name: `${data.firstName} ${data.lastName}`,
-            email: data.user.email,
-            avatar: "/avatars/teacher.jpg",
-          },
-          departments: departments.length ? departments : defaultDepartments,
-        })
-      } catch (err: unknown) {
-        console.error("Failed to fetch teacher data:", err)
-      } finally {
-        setIsLoading(false)
-      }
+    if (!currentUser) {
+      return
     }
-    fetchTeacherData()
-  }, [teacherId, departments, defaultDepartments])
+    setTeacherData({
+      user: {
+        name: currentUser?.name as string,
+        email: currentUser?.email as string,
+        avatar: `/avatars/${currentUser.role}.jpg`,
+      },
+      departments: defaultDepartments,
+    })
+  }, [currentUser])
 
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        {isLoading ? (
-          <div className="text-sm text-gray-500">Loading...</div>
-        ) : (
-          <TeamSwitcher teams={teacherData.departments} />
-        )}
+        <TeamSwitcher teams={teacherData.departments} />
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={TeacherNavItems} />

@@ -1,32 +1,17 @@
-import { NextFunction, Request, Response } from "express"
+import { Request, Response } from "express"
+import mongoose, { Types } from "mongoose"
 import { z } from "zod"
 import Announcement from "../models/Announcement"
+import Attendance from "../models/Attendance"
+import College from "../models/College"
 import Course from "../models/Course"
 import Department from "../models/Department"
-import JobPosting, { JobPostingDocument } from "../models/JobPosting"
-import User, { UserRole } from "../models/user"
-import College from "../models/College"
-import mongoose from "mongoose"
-import Semester, { ISemester } from "../models/Semester"
-import { Types } from "mongoose"
-import Attendance from "../models/Attendance"
 import Grade from "../models/Grade"
+import JobPosting, { JobPostingDocument } from "../models/JobPosting"
+import Semester, { ISemester } from "../models/Semester"
 import Feedback from "../models/feedback"
-
-const updateUserSchema = z.object({
-  name: z.string().min(2).optional(),
-  email: z.string().email().optional(),
-  password: z.string().min(6).optional(),
-  department: z.string().optional(),
-})
-
-const createUserSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
-  password: z.string().min(6),
-  role: z.enum([UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT]),
-  department: z.string().optional(),
-})
+import User, { UserRole } from "../models/user"
+import { createUserSchema, updateUserSchema } from "../schema/admin.schema"
 
 export const createUser = async (req: Request, res: Response): Promise<any> => {
   try {

@@ -4,14 +4,16 @@ import {
   getTeacherDashboard,
   getAdminDashboard,
 } from "../controllers/dashboardController"
-import { authenticate } from "../middleware/auth"
+import { authenticate, authorizeRole } from "../middleware/auth"
 
 const router = express.Router()
 
-router.get("/student/:userId", authenticate, getStudentDashboard)
+router.use(authenticate)
 
-router.get("/teacher/:userId", authenticate, getTeacherDashboard)
+router.get("/student", authorizeRole("student"), getStudentDashboard)
 
-router.get("/admin", authenticate, getAdminDashboard)
+router.get("/teacher", authorizeRole("teacher"), getTeacherDashboard)
+
+router.get("/admin", authorizeRole("admin"), getAdminDashboard)
 
 export default router

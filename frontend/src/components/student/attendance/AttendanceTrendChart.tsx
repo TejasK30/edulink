@@ -11,8 +11,12 @@ import {
   Cell,
 } from "recharts"
 // import { computeMonthlyTrend, getBarColor } from "./utils"
-import { AttendanceRecord } from "@/types/student.types"
-import { computeMonthlyTrend, getBarColor } from "@/utils/student.utils"
+import {
+  AttendanceRecord,
+  computeMonthlyTrend,
+  getBarColor,
+} from "@/types/student.types"
+// import { computeMonthlyTrend, getBarColor } from "@/utils/student.utils"
 
 interface Props {
   attendance: AttendanceRecord[]
@@ -65,9 +69,7 @@ export default function AttendanceTrendChart({
                       <p className="font-bold">
                         {payload[0].payload.fullMonth}
                       </p>
-                      <p style={{ color: getBarColor(payload?.[0]?.value) }}>
-                        Attendance: {payload[0].value}%
-                      </p>
+                      <p style={{}}>Attendance: {payload[0].value}%</p>
                     </div>
                   ) : null
                 }

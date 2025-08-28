@@ -20,7 +20,6 @@ import { authenticate, authorizeRole } from "../middleware/auth"
 
 const router = Router()
 
-// Apply to all routes below:
 router.use(authenticate, authorizeRole("admin"))
 
 // User management

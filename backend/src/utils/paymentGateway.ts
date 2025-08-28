@@ -1,4 +1,4 @@
-import { SIMULATED_PAYMENT_DELAY } from "../constants"
+import { SIMULATED_PAYMENT_DELAY } from "./constants"
 
 export enum PaymentMethod {
   CARD = "CARD",

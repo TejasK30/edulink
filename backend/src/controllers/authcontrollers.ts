@@ -3,40 +3,15 @@ import { Request, Response } from "express"
 import jwt from "jsonwebtoken"
 import mongoose from "mongoose"
 import { z } from "zod"
+import { redis } from "../config/redis"
 import College, { ICollege } from "../models/College"
 import Department, { IDepartment } from "../models/Department"
-import User, { UserRole } from "../models/user"
-
-const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
-})
-
-const userRegistrationSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
-  password: z.string().min(6),
-  role: z.enum(["student", "teacher"]),
-  collegeId: z.string(),
-  departmentId: z.string().optional(),
-})
-
-const adminRegistrationSchema = z.object({
-  adminName: z
-    .string()
-    .min(2, { message: "Name must be at least 2 characters" }),
-  adminEmail: z
-    .string()
-    .email({ message: "Please enter a valid email address" }),
-  adminPassword: z
-    .string()
-    .min(6, { message: "Password must be at least 6 characters" }),
-  collegeOption: z.enum(["existing", "new"]).default("existing"),
-  existingCollegeId: z.string().optional(),
-  collegeName: z.string().optional().nullable(),
-  collegeLocation: z.string().optional().nullable(),
-  departments: z.array(z.string()).optional().nullable(),
-})
+import User from "../models/user"
+import {
+  adminRegistrationSchema,
+  loginSchema,
+  userRegistrationSchema,
+} from "../schema/auth.schema"
 
 export const registerUser = async (
   req: Request,
@@ -409,16 +384,32 @@ export const getProfile = async (req: Request, res: Response): Promise<any> => {
       return res.status(401).json({ message: "Unauthorized" })
     }
 
-    const user = await User.findById(req.user.id).select("_id role college")
+    const cacheKey = `user:${req.user.id}`
+
+    const cachedUser = await redis.get(cacheKey)
+
+    if (cachedUser) {
+      return res.status(200).json(JSON.parse(cachedUser))
+    }
+
+    const user = await User.findById(req.user.id).select(
+      "_id role name email college"
+    )
+
+    console.log("auth get user: ", user)
 
     if (!user) {
       return res.status(404).json({ message: "User not found" })
     }
 
+    await redis.set(cacheKey, JSON.stringify(user), "EX", 300)
+
     return res.status(200).json({
       user: {
         id: user._id,
         role: user.role,
+        name: user.name,
+        email: user.email,
         collegeId: user.college,
       },
     })

@@ -1,3 +1,4 @@
+import { authenticate, authorizeRole } from "../middleware/auth"
 import {
   createAssignment,
   getAssignmentById,
@@ -8,8 +9,10 @@ import { Router } from "express"
 
 const router = Router()
 
+router.use(authenticate)
+
 router.get("/courses/teacher/:teacherId", getTeacherCourses)
-router.post("/teacher/:teacherId", createAssignment)
+router.post("/teacher/:teacherId", authorizeRole("teacher"), createAssignment)
 router.get("/course/:courseId", getAssignmentsForCourse)
 router.get("/:assignmentId", getAssignmentById)
 

@@ -1,6 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton"
-import { AttendanceRecord } from "@/types/student.types"
-import { filterRecords } from "@/utils/student.utils"
+import { AttendanceRecord, filterRecords } from "@/types/student.types"
 import { format, parseISO } from "date-fns"
 import { CheckCircle, Clock, XCircle } from "lucide-react"
 

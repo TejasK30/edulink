@@ -18,8 +18,8 @@ import {
   calculateTotalAmount,
   calculateInstallmentAmount,
   calculateRemaining,
-} from "../helpers"
-import { INSTALLMENT_SURCHARGE_PERCENTAGE } from "../constants"
+} from "./helpers"
+import { INSTALLMENT_SURCHARGE_PERCENTAGE } from "./constants"
 import { v4 as uuidv4 } from "uuid"
 
 export const createPendingPayment = async (

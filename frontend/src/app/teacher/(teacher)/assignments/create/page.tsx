@@ -29,12 +29,12 @@ export default function CreateAssignmentPage() {
   const [selectedCourse, setSelectedCourse] = useState<string>("")
   const [title, setTitle] = useState("")
   const [assignmentName, setAssignmentName] = useState("")
-  const [questions, setQuestions] = useState<string[]>(Array(6).fill(""))
+  const [questions, setQuestions] = useState<string[]>([""])
   const [dueDate, setDueDate] = useState<string>("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
-    if (!currentUser || !currentUser.id) return
+    if (!currentUser?.id) return
     const teacherId = currentUser.id
     const fetchCourses = async () => {
       try {
@@ -44,6 +44,7 @@ export default function CreateAssignmentPage() {
         setTeacherCourses(response.data)
       } catch (error) {
         toast("Failed to load your courses. Please try again.")
+        console.log(error)
       }
     }
     fetchCourses()
@@ -53,6 +54,14 @@ export default function CreateAssignmentPage() {
     const newQuestions = [...questions]
     newQuestions[index] = value
     setQuestions(newQuestions)
+  }
+
+  const addQuestion = () => {
+    setQuestions([...questions, ""])
+  }
+
+  const removeQuestion = (index: number) => {
+    setQuestions(questions.filter((_, i) => i !== index))
   }
 
   const handleSubmit = async () => {
@@ -99,6 +108,7 @@ export default function CreateAssignmentPage() {
     <div className="container mx-auto p-6">
       <h1 className="text-2xl font-bold mb-4">Create New Assignment</h1>
 
+      {/* Course Selection */}
       <div className="mb-4">
         <label className="block text-sm font-medium mb-1">Select Course</label>
         <Select value={selectedCourse} onValueChange={setSelectedCourse}>
@@ -115,6 +125,7 @@ export default function CreateAssignmentPage() {
         </Select>
       </div>
 
+      {/* Title + Name */}
       <div className="mb-4">
         <label className="block text-sm font-medium mb-1">
           Assignment Title
@@ -137,19 +148,34 @@ export default function CreateAssignmentPage() {
         />
       </div>
 
+      {/* Dynamic Questions */}
       <div className="mb-4 space-y-3">
         <label className="block text-sm font-medium">Questions</label>
         {questions.map((q, index) => (
-          <Textarea
-            key={index}
-            placeholder={`Question ${index + 1}`}
-            value={q}
-            onChange={(e) => handleQuestionChange(index, e.target.value)}
-            className="w-full"
-          />
+          <div key={index} className="flex gap-2 items-start">
+            <Textarea
+              placeholder={`Question ${index + 1}`}
+              value={q}
+              onChange={(e) => handleQuestionChange(index, e.target.value)}
+              className="w-full"
+            />
+            {questions.length > 1 && (
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => removeQuestion(index)}
+              >
+                Remove
+              </Button>
+            )}
+          </div>
         ))}
+        <Button type="button" variant="outline" onClick={addQuestion}>
+          + Add Question
+        </Button>
       </div>
 
+      {/* Due Date */}
       <div className="mb-4">
         <label className="block text-sm font-medium">Due Date</label>
         <Input
@@ -160,6 +186,7 @@ export default function CreateAssignmentPage() {
         />
       </div>
 
+      {/* Actions */}
       <div className="flex justify-end gap-3">
         <Button variant="outline" onClick={() => router.back()}>
           Cancel

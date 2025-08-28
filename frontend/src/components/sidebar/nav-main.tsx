@@ -116,7 +116,7 @@ export function NavMain({ items }: NavMainProps) {
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton asChild>
                   <Link
-                    href={item.url}
+                    href={item.url!}
                     className={cn(
                       "flex items-center transition-colors",
                       active ? "bg-primary" : ""

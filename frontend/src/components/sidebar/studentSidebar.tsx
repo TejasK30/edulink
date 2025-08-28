@@ -1,6 +1,5 @@
 "use client"
 
-import { useAppStore } from "@/lib/store"
 import {
   AlertCircle,
   BarChart2,
@@ -15,6 +14,7 @@ import React, { useEffect, useState } from "react"
 import { NavMain } from "./nav-main"
 import { NavUser } from "./nav-user"
 import { Sidebar, SidebarContent, SidebarFooter } from "../ui/sidebar"
+import { useAuth } from "@/lib/providers/auth-provider"
 
 const StudentNavItems = [
   {
@@ -42,14 +42,6 @@ const StudentNavItems = [
     title: "Courses",
     url: "/student/courses",
     icon: GraduationCap,
-  },
-  {
-    title: "Fees",
-    icon: CreditCard,
-    items: [
-      { title: "Fee History", url: "/student/fees/history" },
-      { title: "Make Payment", url: "/student/fees/payment" },
-    ],
   },
   {
     title: "Feedback",
@@ -83,7 +75,7 @@ type StudentData = {
 }
 
 export default function StudentSidebar({ ...props }: StudentSidebarProps) {
-  const { currentUser } = useAppStore()
+  const { user: currentUser } = useAuth()
 
   const [studentData, setStudentData] = useState<StudentData>({
     user: {
@@ -99,8 +91,8 @@ export default function StudentSidebar({ ...props }: StudentSidebarProps) {
     }
     setStudentData({
       user: {
-        name: currentUser?.name as string,
-        email: currentUser?.email as string,
+        name: (currentUser?.name as string) || "Student User",
+        email: (currentUser?.email as string) || "student",
         avatar: `/avatars/${currentUser.role}.jpg`,
       },
     })

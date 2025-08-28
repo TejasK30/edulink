@@ -1,5 +1,5 @@
 import crypto from "crypto"
-import { FeeType } from "./models/FeePayment"
+import { FeeType } from "../models/FeePayment"
 import { FEE_AMOUNTS, SIMULATED_PAYMENT_DELAY } from "./constants"
 
 export const generateTransactionId = (): string => {

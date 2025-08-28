@@ -1,8 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { BookOpen, CheckCircle, Activity } from "lucide-react"
-import { AttendanceRecord } from "@/types/student.types"
-import { computeStats } from "@/utils/student.utils"
+import { AttendanceRecord, computeStats } from "@/types/student.types"
 
 interface Props {
   attendance: AttendanceRecord[]

@@ -12,8 +12,11 @@ import {
   getTeacherDepartments,
   gradeStudentsInCourse,
 } from "../controllers/teacherController"
+import { authenticate, authorizeRole } from "../middleware/auth"
 
 const router = Router()
+
+router.use(authenticate, authorizeRole("teacher"))
 
 router.post("/:teacherId", createAssignment)
 router.post("/grade-students/:teacherId", gradeStudentsInCourse)

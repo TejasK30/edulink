@@ -4,9 +4,9 @@ import React from "react"
 import api from "@/lib/api"
 import { useAuth } from "@/lib/providers/auth-provider"
 import { keepPreviousData, useQuery } from "@tanstack/react-query"
-import UserListPage from "@/components/userlist"
 import { User } from "@/lib/schemas/user.schema"
 import { UserRoleType } from "@/lib/types"
+import UserListPage from "@/components/user/userlist"
 
 const StudentListPage: React.FC = () => {
   const { user, isLoading: authLoading } = useAuth()

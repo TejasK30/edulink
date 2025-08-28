@@ -31,10 +31,7 @@ const StudentDashboard = () => {
   } = useQuery<DashboardData>({
     queryKey: ["studentDashboard", currentUser?.id],
     queryFn: async () => {
-      if (!currentUser?.id) throw new Error("User not authenticated")
-      const response = await dashboardService.getStudentDashboard(
-        currentUser.id as string
-      )
+      const response = await dashboardService.getStudentDashboard()
       return response.data
     },
     enabled: !!currentUser?.id,

@@ -1,4 +1,3 @@
-// src/components/student/attendance/AttendancePage.tsx
 "use client"
 
 import api from "@/lib/api"

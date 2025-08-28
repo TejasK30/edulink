@@ -110,7 +110,7 @@ export default function CourseForm({
   }
 
   return (
-    <Card className="w-full lg:w-1/3">
+    <Card className="w-full h-fit lg:w-1/3">
       <CardHeader>
         <CardTitle>{isEditing ? "Edit Course" : "Add New Course"}</CardTitle>
         <CardDescription>

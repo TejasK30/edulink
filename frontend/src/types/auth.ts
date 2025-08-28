@@ -28,6 +28,8 @@ export interface AdminRegisterData {
 export type AuthContextType = {
   user: {
     id: string
+    name: string
+    email: string
     role: string
     collegeId: string
   } | null

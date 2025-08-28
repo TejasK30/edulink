@@ -3,10 +3,16 @@ import {
   createAnnouncement,
   getAnnouncements,
 } from "../controllers/announcementController"
+import { authenticate, authorizeRole } from "../middleware/auth"
 
 const router = express.Router()
 
-router.post("/:userId", createAnnouncement)
+router.post(
+  "/:userId",
+  authenticate,
+  authorizeRole(["admin", "teacher"]),
+  createAnnouncement
+)
 
 router.get("/:collegeId", getAnnouncements)
 

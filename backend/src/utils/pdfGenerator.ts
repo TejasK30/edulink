@@ -3,8 +3,8 @@ import path from "path"
 import PDFDocument from "pdfkit"
 import { IFeePayment } from "../models/FeePayment"
 import { UserModel } from "../models/user"
-import { formatCurrency, maskCardNumber } from "../helpers"
-import { RECEIPT_VALIDITY_DAYS } from "../constants"
+import { formatCurrency, maskCardNumber } from "./helpers"
+import { RECEIPT_VALIDITY_DAYS } from "./constants"
 
 const RECEIPT_DIR = path.join(process.cwd(), "uploads", "receipts")
 if (!fs.existsSync(RECEIPT_DIR)) {

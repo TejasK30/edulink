@@ -1,5 +1,3 @@
-import { FC } from "react"
-import { format } from "date-fns"
 import {
   Card,
   CardContent,
@@ -8,7 +6,9 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Announcement } from "@/lib/types"
-import { CalendarIcon, Building, BookOpen } from "lucide-react"
+import { format } from "date-fns"
+import { CalendarIcon } from "lucide-react"
+import { FC } from "react"
 
 interface AnnouncementCardProps {
   announcement: Announcement
@@ -34,7 +34,7 @@ const AnnouncementCard: FC<AnnouncementCardProps> = ({ announcement }) => {
       </CardHeader>
       <CardContent className="pb-3">
         <div className="text-sm text-muted-foreground mb-2 flex items-center">
-          <span className="font-medium">By:</span>
+          <span className="font-medium">Description:</span>
           <span className="ml-1">{announcement.authorId.name}</span>
         </div>
         <div className="text-sm min-h-[60px] max-h-[120px] overflow-hidden text-ellipsis">
@@ -45,20 +45,6 @@ const AnnouncementCard: FC<AnnouncementCardProps> = ({ announcement }) => {
         <div className="flex items-center gap-1">
           <CalendarIcon className="h-3 w-3" />
           <span>{formattedDate}</span>
-        </div>
-
-        <div className="flex flex-wrap gap-3">
-          <div className="flex items-center gap-1">
-            <Building className="h-3 w-3" />
-            <span>{announcement.collegeId.name}</span>
-          </div>
-
-          {announcement.departmentId && (
-            <div className="flex items-center gap-1">
-              <BookOpen className="h-3 w-3" />
-              <span>{announcement.departmentId.name}</span>
-            </div>
-          )}
         </div>
       </CardFooter>
     </Card>

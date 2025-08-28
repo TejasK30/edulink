@@ -9,7 +9,7 @@ import {
   INSTALLMENT_OPTIONS,
   INSTALLMENT_SURCHARGE_PERCENTAGE,
   WALLET_OPTIONS,
-} from "../constants"
+} from "../utils/constants"
 import FeePayment, { FeeType, PaymentStatus } from "../models/FeePayment"
 import User, { UserRole } from "../models/user"
 import {

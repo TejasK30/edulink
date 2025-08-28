@@ -4,8 +4,11 @@ import {
   getStudentsByCourse,
   markAttendance,
 } from "../controllers/attendanceController"
+import { authenticate, authorizeRole } from "../middleware/auth"
 
 const router = express.Router()
+
+router.use(authenticate, authorizeRole("teacher"))
 
 router.get("/teacher/courses/:teacherId", getTeacherCourses)
 router.get("/courses/:courseId/students", getStudentsByCourse)
