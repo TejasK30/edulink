@@ -7,6 +7,8 @@ import api from "@/lib/api"
 import { format } from "date-fns"
 import { ArrowLeft } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { AxiosError } from "axios"
+import { ApiErrorResponse } from "@/lib/types"
 
 interface AssignmentDetails {
   _id: string
@@ -46,7 +48,7 @@ export default function AssignmentDetailsPage({
       setError(null)
       try {
         const response = await api.get<AssignmentDetails>(
-          `/teacher/assignments/${assignmentId}`
+          `/teacher/assignments/${assignmentId}`,
         )
         if (response.status === 200) {
           setAssignment(response.data)
@@ -55,8 +57,10 @@ export default function AssignmentDetailsPage({
         } else {
           setError("Failed to fetch assignment details")
         }
-      } catch (error: any) {
-        setError(error.message || "An unexpected error occurred")
+      } catch (error) {
+        const axiosError = error as AxiosError<ApiErrorResponse>
+
+        setError(axiosError.message || "An unexpected error occurred")
       } finally {
         setLoading(false)
       }

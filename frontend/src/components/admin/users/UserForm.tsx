@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/select"
 import React from "react"
 import { UseFormReturn } from "react-hook-form"
-import { Department, User, UserFormValues } from "@/lib/schemas/users.schema"
+import { Department, User, UserFormValues } from "@/lib/schemas/user.schema"
 
 interface UserFormProps {
   form: UseFormReturn<UserFormValues>

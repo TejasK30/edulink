@@ -26,7 +26,8 @@ import {
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import api from "@/lib/api"
-import { User } from "@/lib/store"
+import { User } from "@/lib/schemas/user.schema"
+// import { User } from "@/lib/store"
 import { getInitials } from "@/lib/utils"
 import {
   ArrowLeft,
@@ -104,7 +105,7 @@ const UserProfilePage = () => {
       try {
         setLoading(true)
         const response = await api.get<UserProfileExtended>(
-          `/admin/users/${role}/${id}`
+          `/admin/users/${role}/${id}`,
         )
 
         if (response.status === 200) {
@@ -112,9 +113,10 @@ const UserProfilePage = () => {
         } else {
           setError("Failed to fetch user data")
         }
+        // eslint-disable-next-line
       } catch (err: any) {
         setError(
-          err.message || "An error occurred while fetching the user data"
+          err.message || "An error occurred while fetching the user data",
         )
         console.error("Error fetching user data:", err)
       } finally {
@@ -173,7 +175,7 @@ const UserProfilePage = () => {
 
     const totalClasses = user.attendance.length
     const presentCount = user.attendance.filter(
-      (a) => a.status === "present"
+      (a) => a.status === "present",
     ).length
     const percentage = (presentCount / totalClasses) * 100
 
@@ -204,7 +206,7 @@ const UserProfilePage = () => {
 
     const total = user.feedbacks.reduce(
       (sum, feedback) => sum + feedback.rating,
-      0
+      0,
     )
     return (total / user.feedbacks.length).toFixed(1)
   }
@@ -485,7 +487,7 @@ const UserProfilePage = () => {
                                 {user.teachingCourses.reduce(
                                   (total, course) =>
                                     total + course.enrolledStudents,
-                                  0
+                                  0,
                                 )}
                               </p>
                               <p className="text-sm text-muted-foreground">
@@ -546,11 +548,11 @@ const UserProfilePage = () => {
                           {user.enrolledCourses.map((course) => {
                             const courseAttendance =
                               user.attendance?.filter(
-                                (a) => a.courseId._id === course._id
+                                (a) => a.courseId._id === course._id,
                               ) || []
 
                             const presentCount = courseAttendance.filter(
-                              (a) => a.status === "present"
+                              (a) => a.status === "present",
                             ).length
 
                             const attendanceRate =
@@ -638,12 +640,12 @@ const UserProfilePage = () => {
                                         {grade.gradeValue >= 90
                                           ? "A"
                                           : grade.gradeValue >= 80
-                                          ? "B"
-                                          : grade.gradeValue >= 70
-                                          ? "C"
-                                          : grade.gradeValue >= 60
-                                          ? "D"
-                                          : "F"}{" "}
+                                            ? "B"
+                                            : grade.gradeValue >= 70
+                                              ? "C"
+                                              : grade.gradeValue >= 60
+                                                ? "D"
+                                                : "F"}{" "}
                                         (
                                         {grade.gradeValue >= 60
                                           ? "Pass"

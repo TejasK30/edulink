@@ -131,7 +131,7 @@ export interface AttendanceApiResponse {
 
 export function filterRecords(
   records: AttendanceRecord[],
-  courseFilter: string
+  courseFilter: string,
 ): AttendanceRecord[] {
   if (!courseFilter || courseFilter === "all") return records
 
@@ -139,7 +139,7 @@ export function filterRecords(
     (record) =>
       record.courseId._id === courseFilter ||
       record.courseId.name === courseFilter ||
-      record.courseId.code === courseFilter
+      record.courseId.code === courseFilter,
   )
 }
 
@@ -186,7 +186,7 @@ export function computeStats(records: AttendanceRecord[]): {
 
 export function computeMonthlyTrend(
   records: AttendanceRecord[],
-  courseFilter: string
+  courseFilter: string,
 ): { month: string; fullMonth: string; percentage: number }[] {
   // filter by course if not "all"
   const filtered =
@@ -196,7 +196,7 @@ export function computeMonthlyTrend(
           (r) =>
             r.courseId._id === courseFilter ||
             r.courseId.code === courseFilter ||
-            r.courseId.name === courseFilter
+            r.courseId.name === courseFilter,
         )
 
   // group by month (YYYY-MM)
@@ -229,7 +229,7 @@ export function computeMonthlyTrend(
     })
     .sort(
       (a, b) =>
-        new Date(a.fullMonth).getTime() - new Date(b.fullMonth).getTime()
+        new Date(a.fullMonth).getTime() - new Date(b.fullMonth).getTime(),
     )
 
   return trend

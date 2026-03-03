@@ -16,7 +16,7 @@ export default function AnnouncementsPage() {
   const { user: currentUser } = useAuth()
   const [currentPage, setCurrentPage] = useState(1)
   const [activeTab, setActiveTab] = useState<"all" | "college" | "department">(
-    "all"
+    "all",
   )
   const [accumulatedData, setAccumulatedData] = useState<Announcement[]>([])
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
@@ -46,7 +46,7 @@ export default function AnnouncementsPage() {
     queryFn: async () => {
       if (!currentUser) throw new Error("No user")
       const res = await api.get<PaginatedResponse<Announcement>>(
-        buildEndpoint(currentPage)
+        buildEndpoint(currentPage),
       )
       return res.data
     },
@@ -77,19 +77,22 @@ export default function AnnouncementsPage() {
     const total = announcements.pagination.pages
     if (currentPage >= total) return
 
+    const element = loadMoreRef.current
+    if (!element) return
+
     const obs = new IntersectionObserver(
       ([entry]) => entry.isIntersecting && setCurrentPage((p) => p + 1),
-      { threshold: 0.5 }
+      { threshold: 0.5 },
     )
 
-    if (loadMoreRef.current) obs.observe(loadMoreRef.current)
+    obs.observe(element)
+
     return () => {
-      if (loadMoreRef.current) obs.unobserve(loadMoreRef.current)
+      obs.unobserve(element)
     }
   }, [isLoading, isFetching, announcements, currentPage])
-
   const handleTabChange = (value: string) => {
-    setActiveTab(value as any)
+    setActiveTab(value as "all" | "college" | "department")
   }
   const handleRefresh = () => {
     setCurrentPage(1)
@@ -135,7 +138,7 @@ export default function AnnouncementsPage() {
                   isFetching={isFetching}
                 />
               </TabsContent>
-            )
+            ),
         )}
       </Tabs>
 
@@ -149,7 +152,7 @@ export default function AnnouncementsPage() {
 interface AnnouncementContentProps {
   announcements?: PaginatedResponse<Announcement>
   isLoading: boolean
-  error: any
+  error: Error | null
   accumulatedData: Announcement[]
   isFetching: boolean
 }

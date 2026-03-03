@@ -9,6 +9,8 @@ import api from "@/lib/api"
 import { toast } from "sonner"
 import { ArrowLeft } from "lucide-react"
 import { format } from "date-fns"
+import { AxiosError } from "axios"
+import { ApiErrorResponse } from "@/lib/types"
 
 interface AssignmentDetail {
   _id: string
@@ -38,14 +40,16 @@ export default function AssignmentDetailPage() {
       setIsLoading(true)
       try {
         const response = await api.get<AssignmentDetail>(
-          `/assignments/${assignmentId}`
+          `/assignments/${assignmentId}`,
         )
         setAssignment(response.data)
-      } catch (err: any) {
-        setError(
-          err.response?.data?.message || "Failed to load assignment details"
-        )
-        toast("Failed to load assignment details")
+      } catch (err) {
+        const axiosError = err as AxiosError<ApiErrorResponse>
+        const message =
+          axiosError.response?.data?.message ??
+          "Failed to load assignment details"
+        setError(message)
+        toast(message)
       } finally {
         setIsLoading(false)
       }
@@ -53,7 +57,7 @@ export default function AssignmentDetailPage() {
     fetchAssignmentDetails()
   }, [assignmentId])
 
-  const safeFormat = (dateStr: string) => {
+  const safeFormat = (dateStr: string): string => {
     const date = new Date(dateStr)
     return isNaN(date.getTime()) ? "Invalid date" : format(date, "PPP, p")
   }

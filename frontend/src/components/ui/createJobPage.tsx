@@ -28,8 +28,10 @@ import { Textarea } from "@/components/ui/textarea"
 import api from "@/lib/api"
 import { useAuth } from "@/lib/providers/auth-provider"
 import { jobSchema } from "@/lib/schemas/job.schema"
+import { ApiErrorResponse } from "@/lib/types"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation } from "@tanstack/react-query"
+import { AxiosError } from "axios"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
@@ -81,9 +83,13 @@ export default function CreateJobPage() {
       form.reset()
       router.push("/teacher/jobs/list")
     },
-    onError: (error: any) => {
+    onError: (error) => {
+      const axiosError = error as AxiosError<ApiErrorResponse>
+
       toast.error(
-        error?.response?.data?.message || error.message || "Failed to post job."
+        axiosError?.response?.data?.message ||
+          error.message ||
+          "Failed to post job.",
       )
     },
   })

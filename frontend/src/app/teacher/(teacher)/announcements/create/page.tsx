@@ -50,7 +50,7 @@ export default function CreateAnnouncementForm() {
       }
       const response = await api.post(
         `/announcements/${currentUser?.id}`,
-        payload
+        payload,
       )
       return response.data
     },
@@ -63,7 +63,7 @@ export default function CreateAnnouncementForm() {
         toast("❌ Failed: " + data.message)
       }
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error("Mutation error:", error)
       toast("❌ Something went wrong. Please try again.")
     },

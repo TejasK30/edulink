@@ -28,6 +28,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { useCreateCourse, useUpdateCourse } from "@/hooks/useCourse"
 import { courseFormSchema } from "@/lib/schemas/course.schema"
+import { ApiErrorResponse } from "@/lib/types"
 import {
   Course,
   CourseFormSchemaType,
@@ -36,6 +37,7 @@ import {
   Teacher,
 } from "@/types/course.types"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { AxiosError } from "axios"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 
@@ -96,10 +98,11 @@ export default function CourseForm({
 
       form.reset()
       onEditComplete?.()
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<ApiErrorResponse>
       toast.error(
-        error.response?.data?.message ||
-          (isEditing ? "Failed to update course" : "Failed to create course")
+        axiosError.response?.data?.message ||
+          (isEditing ? "Failed to update course" : "Failed to create course"),
       )
     }
   }
@@ -261,8 +264,8 @@ export default function CourseForm({
                 {isLoading
                   ? "Processing..."
                   : isEditing
-                  ? "Update Course"
-                  : "Create Course"}
+                    ? "Update Course"
+                    : "Create Course"}
               </Button>
               {isEditing && (
                 <Button type="button" variant="outline" onClick={handleCancel}>

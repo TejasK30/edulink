@@ -1,4 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Course } from "@/types/course.types"
+import {
+  Assignment,
+  AttendanceSummary,
+  CourseEnrollment,
+  CurrentSemester,
+} from "@/types/teacher.types"
 // import {
 //   Assignment,
 //   AttendanceSummary,
@@ -31,7 +38,7 @@ export const DashboardStats = ({
 }: DashboardStatsProps) => {
   const totalStudents = courseEnrollments.reduce(
     (sum: number, course: CourseEnrollment) => sum + course.studentCount,
-    0
+    0,
   )
 
   const averageAttendance =
@@ -40,8 +47,8 @@ export const DashboardStats = ({
           attendanceSummary.reduce(
             (sum: number, course: AttendanceSummary) =>
               sum + course.attendanceRate,
-            0
-          ) / attendanceSummary.length
+            0,
+          ) / attendanceSummary.length,
         )
       : 0
 

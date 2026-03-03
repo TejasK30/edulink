@@ -4,12 +4,12 @@ import { DashboardData } from "@/types/teacher.types"
 
 export const useTeacherDashboard = (
   teacherId: string,
-  options?: { enabled?: boolean }
+  options?: { enabled?: boolean },
 ) => {
   return useQuery({
     queryKey: ["teacher-dashboard", teacherId],
     queryFn: async () => {
-      const response = await dashboardService.getTeacherDashboard(teacherId)
+      const response = await dashboardService.getTeacherDashboard()
       return response.data as DashboardData
     },
     enabled: options?.enabled,

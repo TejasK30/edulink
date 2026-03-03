@@ -1,8 +1,6 @@
 "use client"
 import { Avatar } from "@/components/ui/avatar"
-
 import { Button } from "@/components/ui/button"
-
 import {
   Card,
   CardContent,
@@ -13,10 +11,13 @@ import {
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
-import { AnimatePresence, motion } from "framer-motion"
+import {
+  AnimatePresence,
+  motion,
+  type TargetAndTransition,
+} from "framer-motion"
 import { Loader2, MessageSquare, SendHorizonal, X } from "lucide-react"
 import React, { useEffect, useRef, useState } from "react"
-import "dotenv/config"
 import axios from "axios"
 import { useAuth } from "@/lib/providers/auth-provider"
 
@@ -93,9 +94,7 @@ const ChatbotButton: React.FC = () => {
     e.preventDefault()
 
     if (!input.trim() || isLoading) {
-      if (isOpen && !isLoading) {
-        inputRef.current?.focus()
-      }
+      inputRef.current?.focus()
       return
     }
 
@@ -129,7 +128,7 @@ const ChatbotButton: React.FC = () => {
       const res = await axios.post(
         `http://localhost:8000/api/chat/${currentUser.id}`,
         { message: userMessage.content },
-        { headers: { "Content-Type": "application/json" } }
+        { headers: { "Content-Type": "application/json" } },
       )
 
       const botMessage: Message = {
@@ -158,18 +157,19 @@ const ChatbotButton: React.FC = () => {
     }
   }
 
-  const floatingAnimation = {
+  // ✅ Typed animations
+  const floatingAnimation: TargetAndTransition = {
     y: [0, -6, 0],
     scale: [1, 1.05, 1],
     transition: {
       duration: 2,
       repeat: Infinity,
-      repeatType: "loop" as const,
-      ease: "easeInOut",
+      repeatType: "loop",
+      ease: "easeInOut" as const,
     },
   }
 
-  const pulseAnimation = {
+  const pulseAnimation: TargetAndTransition = {
     scale: [1, 1.15, 1],
     boxShadow: [
       "0 0 0 0 rgba(124, 58, 237, 0.7)",
@@ -178,9 +178,15 @@ const ChatbotButton: React.FC = () => {
     ],
     transition: {
       duration: 2,
-      ease: "easeInOut",
+      ease: "easeInOut" as const,
     },
   }
+
+  const currentAnimation: TargetAndTransition | undefined = isOpen
+    ? undefined
+    : isPulsing
+      ? pulseAnimation
+      : floatingAnimation
 
   return (
     <>
@@ -188,34 +194,21 @@ const ChatbotButton: React.FC = () => {
         className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50"
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        exit={{ opacity: 0, scale: 0.8 }}
-        transition={{ type: "spring", stiffness: 260, damping: 20 }}
       >
-        <motion.div
-          animate={isOpen ? {} : isPulsing ? pulseAnimation : floatingAnimation}
-        >
+        <motion.div animate={currentAnimation}>
           <Button
             onClick={toggleChatbot}
             size="icon"
             className={cn(
-              "h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-primary shadow-lg hover:shadow-xl transition-all",
-              isPulsing && !isOpen && "ring-4 ring-primary/30"
+              "h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-primary shadow-lg",
+              isPulsing && !isOpen && "ring-4 ring-primary/30",
             )}
-            aria-label="Toggle chatbot"
           >
-            <motion.span
-              key={isOpen ? "close" : "open"}
-              initial={{ opacity: 0, scale: 0.8, rotate: isOpen ? 0 : 45 }}
-              animate={{ opacity: 1, scale: 1, rotate: 0 }}
-              exit={{ opacity: 0, scale: 0.8, rotate: isOpen ? -45 : 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              {isOpen ? (
-                <X className="h-6 w-6" />
-              ) : (
-                <MessageSquare className="h-6 w-6" />
-              )}
-            </motion.span>
+            {isOpen ? (
+              <X className="h-6 w-6" />
+            ) : (
+              <MessageSquare className="h-6 w-6" />
+            )}
           </Button>
         </motion.div>
       </motion.div>
@@ -223,117 +216,67 @@ const ChatbotButton: React.FC = () => {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            className="fixed bottom-20 md:bottom-24 right-4 md:right-6 z-50 w-[calc(100%-2rem)] max-w-[400px] md:max-w-md left-4 md:left-auto"
+            className="fixed bottom-20 right-4 z-50 w-[calc(100%-2rem)] max-w-md"
             initial={{ y: 20, opacity: 0, scale: 0.95 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 20, opacity: 0, scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 300, damping: 25 }}
           >
-            <Card className="border shadow-xl max-h-[80vh] flex flex-col rounded-lg overflow-hidden">
-              <CardHeader className="bg-primary text-primary-foreground py-3 px-4 flex flex-row items-center justify-between">
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+            <Card className="shadow-xl flex flex-col rounded-lg overflow-hidden">
+              <CardHeader className="bg-primary text-primary-foreground py-3 px-4">
+                <CardTitle className="flex items-center gap-2">
                   <Avatar className="h-8 w-8 bg-primary-foreground flex items-center justify-center">
-                    <motion.div
-                      className="text-primary font-bold text-sm"
-                      animate={{ scale: [1, 1.1, 1] }}
-                      transition={{ duration: 1.5, repeat: Infinity }}
-                    >
-                      AI
-                    </motion.div>
+                    <div className="text-primary font-bold text-sm">AI</div>
                   </Avatar>
                   Student Assistant
                 </CardTitle>
               </CardHeader>
 
-              <CardContent
-                className="p-0 flex-grow overflow-hidden"
-                ref={chatContainerRef}
-              >
+              <CardContent className="p-0" ref={chatContainerRef}>
                 <ScrollArea className="h-[400px] px-4 py-4">
-                  <div className="flex flex-col gap-4 pb-2">
-                    {messages.map((msg, index) => (
-                      <motion.div
-                        key={msg.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{
-                          duration: 0.3,
-                          delay:
-                            index === 0 && messages.length === 1 && isOpen
-                              ? 0.3
-                              : 0,
-                        }}
-                        className={cn(
-                          "max-w-[85%] p-3 rounded-lg text-sm leading-relaxed",
-                          msg.sender === "user"
-                            ? "ml-auto bg-primary text-primary-foreground rounded-br-none"
-                            : "bg-muted rounded-tl-none border border-border"
-                        )}
-                      >
-                        <p className="whitespace-pre-wrap break-words">
-                          {msg.content}
-                        </p>
-                        <div className="text-xs opacity-70 mt-1 text-right">
-                          {msg.timestamp.toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </div>
-                      </motion.div>
-                    ))}
-                    {isLoading && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="max-w-[85%] p-3 bg-muted rounded-lg rounded-tl-none border border-border flex items-center gap-2 text-sm"
-                      >
-                        <Loader2 className="animate-spin h-4 w-4 text-muted-foreground" />
-                        <motion.span
-                          className="text-muted-foreground"
-                          animate={{ opacity: [0.5, 1, 0.5] }}
-                          transition={{ duration: 1.5, repeat: Infinity }}
-                        >
-                          Thinking...
-                        </motion.span>
-                      </motion.div>
-                    )}
-                    <div ref={messagesEndRef} />
-                  </div>
+                  {messages.map((msg) => (
+                    <div
+                      key={msg.id}
+                      className={cn(
+                        "max-w-[85%] p-3 rounded-lg text-sm mb-2",
+                        msg.sender === "user"
+                          ? "ml-auto bg-primary text-primary-foreground"
+                          : "bg-muted border",
+                      )}
+                    >
+                      {msg.content}
+                    </div>
+                  ))}
+
+                  {isLoading && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Loader2 className="animate-spin h-4 w-4" />
+                      Thinking...
+                    </div>
+                  )}
+
+                  <div ref={messagesEndRef} />
                 </ScrollArea>
               </CardContent>
 
-              <CardFooter className="p-4 border-t bg-background">
+              <CardFooter className="p-4 border-t">
                 <form
                   onSubmit={handleSubmit}
                   className="flex items-center gap-3 w-full"
                 >
                   <Input
                     ref={inputRef}
-                    placeholder={
-                      currentUser?.id
-                        ? "Ask me anything..."
-                        : "Please log in to chat..."
-                    }
+                    placeholder="Ask me anything..."
                     value={input}
                     onChange={handleInputChange}
-                    className="flex-1 text-sm h-10"
-                    disabled={!currentUser?.id || isLoading}
-                    autoFocus={isOpen}
+                    disabled={isLoading}
                   />
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                  <Button
+                    type="submit"
+                    size="icon"
+                    disabled={!input.trim() || isLoading}
                   >
-                    <Button
-                      type="submit"
-                      size="icon"
-                      disabled={!input.trim() || !currentUser?.id || isLoading}
-                      className="h-10 w-10 rounded-full bg-primary hover:bg-primary/90 transition-colors"
-                    >
-                      <SendHorizonal className="h-5 w-5" />
-                      <span className="sr-only">Send</span>
-                    </Button>
-                  </motion.div>
+                    <SendHorizonal className="h-5 w-5" />
+                  </Button>
                 </form>
               </CardFooter>
             </Card>

@@ -1,11 +1,9 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-*{
+* {
   font-family: "Inter", sans-serif;
 }
-
-
 
 @custom-variant dark (&:is(.dark *));
 
@@ -125,4 +123,3 @@
     @apply bg-background text-foreground;
   }
 }
-

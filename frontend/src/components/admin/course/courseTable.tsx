@@ -42,6 +42,8 @@ import {
 } from "@/components/ui/table"
 import { Edit, Trash, Search, Filter } from "lucide-react"
 import { useDeleteCourse } from "@/hooks/useCourse"
+import { ApiErrorResponse } from "@/lib/types"
+import { AxiosError } from "axios"
 
 interface CourseTableProps {
   courses: Course[]
@@ -63,8 +65,12 @@ export default function CourseTable({ courses, onEdit }: CourseTableProps) {
     try {
       await deleteCourseMutation.mutateAsync(deleteId)
       toast.success("Course deleted successfully.")
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Failed to delete course")
+    } catch (error) {
+      const axiosError = error as AxiosError<ApiErrorResponse>
+
+      toast.error(
+        axiosError.response?.data?.message || "Failed to delete course",
+      )
     } finally {
       setShowDeleteDialog(false)
       setDeleteId(null)

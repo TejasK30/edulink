@@ -39,7 +39,7 @@ export default function CreateAssignmentPage() {
     const fetchCourses = async () => {
       try {
         const response = await api.get(
-          `/assignments/courses/teacher/${teacherId}`
+          `/assignments/courses/teacher/${teacherId}`,
         )
         setTeacherCourses(response.data)
       } catch (error) {
@@ -89,7 +89,7 @@ export default function CreateAssignmentPage() {
       const teacherId = currentUser.id
       const response = await api.post(
         `/assignments/teacher/${teacherId}`,
-        payload
+        payload,
       )
       if (response.status === 201) {
         toast("Assignment created successfully!")
@@ -97,6 +97,7 @@ export default function CreateAssignmentPage() {
       } else {
         toast("Failed to create assignment.")
       }
+      // eslint-disable-next-line
     } catch (error: any) {
       toast("Error creating assignment: " + error.message)
     } finally {

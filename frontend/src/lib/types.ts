@@ -501,3 +501,7 @@ export type UserProfileExtended = User & {
   createdAt?: string
   updatedAt?: string
 }
+
+export interface ApiErrorResponse {
+  message: string
+}

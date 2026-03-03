@@ -29,18 +29,17 @@ const TeacherJobsListPage = () => {
       if (currentUser?.collegeId) {
         try {
           const response = await api.get(
-            `/student/jobs/${currentUser.collegeId}`
+            `/teacher/jobs/${currentUser.collegeId}`,
           )
           setJobs(response.data)
-        } catch (error: any) {
-          toast.error(
-            error?.response?.data?.message || "Failed to load job postings."
-          )
+        } catch (error) {
+          console.error(error)
+          toast.error("Failed to load job postings.")
         }
       } else if (hasMounted && currentUser) {
         console.warn(
           "currentUser exists but collegeid is undefined:",
-          currentUser
+          currentUser,
         )
         toast.error("User college information is missing.")
       }

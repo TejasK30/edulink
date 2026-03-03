@@ -34,6 +34,8 @@ import { toast } from "sonner"
 import * as z from "zod"
 import api from "@/lib/api"
 import { useDepartments } from "@/hooks/useSemester"
+import { AxiosError } from "axios"
+import { ApiErrorResponse } from "@/lib/types"
 
 export function SemesterForm() {
   const { user } = useAuth()
@@ -67,8 +69,11 @@ export function SemesterForm() {
       queryClient.invalidateQueries({ queryKey: ["semesters"] })
       form.reset()
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to create semester")
+    onError: (error) => {
+      const axiosError = error as AxiosError<ApiErrorResponse>
+      toast.error(
+        axiosError.response?.data?.message || "Failed to create semester",
+      )
     },
   })
 

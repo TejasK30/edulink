@@ -1,7 +1,7 @@
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
 interface AnnouncementsErrorProps {
-  error: any
+  error: Error | null
 }
 
 export default function AnnouncementsError({ error }: AnnouncementsErrorProps) {

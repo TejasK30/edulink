@@ -6,7 +6,7 @@ import {
   User,
   Department,
   UserFormData,
-} from "@/lib/schemas/users.schema"
+} from "@/lib/schemas/user.schema"
 
 export const useUsers = (role: string, collegeId: string) => {
   return useQuery({
@@ -22,7 +22,7 @@ export const useUsers = (role: string, collegeId: string) => {
 export const useUserDetails = (
   role: string,
   userId: string,
-  enabled: boolean
+  enabled: boolean,
 ) => {
   return useQuery({
     queryKey: ["user-details", role, userId],
@@ -59,7 +59,7 @@ export const useCreateUser = (role: string, collegeId: string) => {
       }
       const response = await api.post(
         `/admin/users/${collegeId}/create`,
-        payload
+        payload,
       )
       return response.data
     },
@@ -71,7 +71,7 @@ export const useCreateUser = (role: string, collegeId: string) => {
       toast.error(
         `Error creating ${role}: ${
           error.response?.data?.error || error.message
-        }`
+        }`,
       )
     },
   })
@@ -106,7 +106,7 @@ export const useUpdateUser = (role: string, collegeId: string) => {
       toast.error(
         `Error updating ${role}: ${
           error.response?.data?.error || error.message
-        }`
+        }`,
       )
     },
   })
@@ -128,7 +128,7 @@ export const useDeleteUser = (role: string, collegeId: string) => {
       toast.error(
         `Error deleting ${role}: ${
           error.response?.data?.error || error.message
-        }`
+        }`,
       )
     },
   })

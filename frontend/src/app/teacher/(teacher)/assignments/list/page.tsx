@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import api from "@/lib/api"
 import { useAuth } from "@/lib/providers/auth-provider"
+import { ApiErrorResponse } from "@/lib/types"
 import { cn } from "@/lib/utils"
+import { AxiosError } from "axios"
 import { format, isPast } from "date-fns"
 import { ArrowLeft, Eye, PlusCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
@@ -19,12 +21,11 @@ interface Assignment {
   updatedAt: string
   questions: string[]
 }
-
 const AssignmentListPage = () => {
   const router = useRouter()
   const { user: currentUser } = useAuth()
   const [assignments, setAssignments] = useState<Assignment[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -35,16 +36,19 @@ const AssignmentListPage = () => {
       setLoading(true)
       setError(null)
       try {
-        const response = await api.get(
-          `/teacher/assignments/teacher/${currentUser.id}`
+        const response = await api.get<Assignment[]>(
+          `/teacher/assignments/teacher/${currentUser.id}`,
         )
         if (response.status === 200) {
           setAssignments(response.data)
         } else {
           setError("Failed to fetch assignments")
         }
-      } catch (error: any) {
-        setError(error.message || "An unexpected error occurred")
+      } catch (err) {
+        const axiosError = err as AxiosError<ApiErrorResponse>
+        setError(
+          axiosError.response?.data?.message ?? "An unexpected error occurred",
+        )
       } finally {
         setLoading(false)
       }
@@ -58,7 +62,7 @@ const AssignmentListPage = () => {
     return isPast(dueDateObj) ? "Overdue" : "Upcoming"
   }
 
-  const handleViewAssignment = (assignmentId: string) => {
+  const handleViewAssignment = (assignmentId: string): void => {
     router.push(`/teacher/assignments/${assignmentId}`)
   }
 

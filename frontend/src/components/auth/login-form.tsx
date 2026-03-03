@@ -11,8 +11,10 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { LoginFormSchema } from "@/lib/schemas/auth.schema"
+import { ApiErrorResponse } from "@/lib/types"
 import { login } from "@/services/auth"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { AxiosError } from "axios"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
@@ -41,9 +43,9 @@ export function LoginForm() {
         toast.success("Login successful")
         router.push(`/${result.data.role}/dashboard`)
       }
-    } catch (error: any) {
-      console.error(error)
-      toast(error.response?.data?.message || "Login failed")
+    } catch (error) {
+      const axiosError = error as AxiosError<ApiErrorResponse>
+      toast(axiosError.response?.data?.message || "Login failed")
     } finally {
       setIsLoading(false)
     }

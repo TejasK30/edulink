@@ -22,30 +22,39 @@ export default function AssignCoursePage() {
   const [courses, setCourses] = useState<Course[]>([])
   const [selectedDepartmentId, setSelectedDepartmentId] = useState<string>("")
   const [selectedCourseId, setSelectedCourseId] = useState<string>("")
+  const [teacherId, setTeacherId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
+
   const router = useRouter()
   const { user: currentUser } = useAuth()
 
   useEffect(() => {
-    console.log("Current user:", currentUser)
+    if (currentUser?.id) {
+      setTeacherId(currentUser.id)
+    } else if (typeof window !== "undefined") {
+      const storedId = localStorage.getItem("teacherId")
+      if (storedId) setTeacherId(storedId)
+    }
   }, [currentUser])
 
-  const teacherId = currentUser?.id || localStorage.getItem("teacherId")
-
+  // Fetch Departments
   useEffect(() => {
+    if (!teacherId) return
+
     const fetchDepartments = async () => {
       setIsLoading(true)
       try {
         const response = await api.get(`/teacher/${teacherId}/departments`)
         setDepartments(response.data)
-      } catch (error) {
-        toast("Error \nFailed to load departments. Please try again.")
+      } catch {
+        toast.error("Failed to load departments. Please try again.")
       } finally {
         setIsLoading(false)
       }
     }
-    if (teacherId) fetchDepartments()
+
+    fetchDepartments()
   }, [teacherId])
 
   const handleDepartmentChange = async (departmentId: string) => {
@@ -58,19 +67,19 @@ export default function AssignCoursePage() {
     setIsLoading(true)
     try {
       const response = await api.get(
-        `/teacher/departments/${departmentId}/courses`
+        `/teacher/departments/${departmentId}/courses`,
       )
       setCourses(response.data)
-    } catch (error) {
-      toast("Error \nFailed to load courses. Please try again.")
+    } catch {
+      toast.error("Failed to load courses. Please try again.")
     } finally {
       setIsLoading(false)
     }
   }
 
   const handleSubmit = async () => {
-    if (!selectedCourseId) {
-      toast("Error \nPlease select a course to teach.")
+    if (!selectedCourseId || !teacherId) {
+      toast.error("Please select a course.")
       return
     }
 
@@ -80,10 +89,10 @@ export default function AssignCoursePage() {
         courseId: selectedCourseId,
       })
 
-      toast("Success: You've been assigned to the course successfully.")
+      toast.success("You've been assigned to the course successfully.")
       router.push("/teacher/dashboard")
-    } catch (error) {
-      toast("Error \nFailed to assign course. Please try again.")
+    } catch {
+      toast.error("Failed to assign course. Please try again.")
     } finally {
       setIsSubmitting(false)
     }
@@ -92,7 +101,7 @@ export default function AssignCoursePage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl md:text-3xl font-bold mb-6">
-        Assign Course to Teach
+        Assign Course to Teacher
       </h1>
 
       <Card className="w-full max-w-xl mx-auto">
@@ -104,16 +113,15 @@ export default function AssignCoursePage() {
         </CardHeader>
 
         <CardContent className="space-y-6">
+          {/* Department */}
           <div className="space-y-2">
-            <label htmlFor="department" className="text-sm font-medium">
-              Department
-            </label>
+            <label className="text-sm font-medium">Department</label>
             <Select
               value={selectedDepartmentId}
               onValueChange={handleDepartmentChange}
               disabled={isLoading || departments.length === 0}
             >
-              <SelectTrigger id="department" className="w-full">
+              <SelectTrigger>
                 <SelectValue placeholder="Select a department" />
               </SelectTrigger>
               <SelectContent>
@@ -126,10 +134,9 @@ export default function AssignCoursePage() {
             </Select>
           </div>
 
+          {/* Course */}
           <div className="space-y-2">
-            <label htmlFor="course" className="text-sm font-medium">
-              Course
-            </label>
+            <label className="text-sm font-medium">Course</label>
             <Select
               value={selectedCourseId}
               onValueChange={setSelectedCourseId}
@@ -137,7 +144,7 @@ export default function AssignCoursePage() {
                 isLoading || !selectedDepartmentId || courses.length === 0
               }
             >
-              <SelectTrigger id="course" className="w-full">
+              <SelectTrigger>
                 <SelectValue placeholder="Select a course" />
               </SelectTrigger>
               <SelectContent>
@@ -150,12 +157,13 @@ export default function AssignCoursePage() {
             </Select>
 
             {selectedDepartmentId && courses.length === 0 && !isLoading && (
-              <p className="text-sm text-muted-foreground mt-2">
+              <p className="text-sm text-muted-foreground">
                 No available courses in this department.
               </p>
             )}
           </div>
 
+          {/* Course Details */}
           {selectedCourseId && (
             <div className="bg-muted p-4 rounded-md">
               <h3 className="font-medium mb-2">Course Details</h3>
@@ -184,6 +192,7 @@ export default function AssignCoursePage() {
             </div>
           )}
 
+          {/* Submit */}
           <Button
             onClick={handleSubmit}
             className="w-full"

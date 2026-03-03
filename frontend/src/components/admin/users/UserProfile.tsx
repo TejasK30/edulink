@@ -126,8 +126,8 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, role }) => {
               <ul className="list-disc list-inside ml-4">
                 {user.feedbacks.map((feedback) => (
                   <li key={feedback._id}>
-                    Rating: {feedback.rating}/5 - "{feedback.message}" (on{" "}
-                    {new Date(feedback.createdAt).toLocaleDateString()})
+                    Rating: {feedback.rating}/5 - &quot;{feedback.message}&quot;
+                    (on {new Date(feedback.createdAt).toLocaleDateString()})
                   </li>
                 ))}
               </ul>

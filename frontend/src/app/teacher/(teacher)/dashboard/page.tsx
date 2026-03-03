@@ -23,6 +23,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "@/lib/providers/auth-provider"
 import { dashboardService } from "@/services/dashboardService"
+import { AxiosError } from "axios"
 import {
   AlertCircleIcon,
   BookOpenIcon,
@@ -124,26 +125,30 @@ const TeacherDashboard = () => {
   const { user: currentUser } = useAuth()
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        if (!currentUser) return
+    if (!currentUser) return
 
+    const fetchDashboardData = async () => {
+      setLoading(true)
+      setError(null)
+      try {
         if (currentUser.role !== "teacher") {
           router.push(`/${currentUser.role}/dashboard`)
           return
         }
 
-        const response = await dashboardService.getTeacherDashboard(
-          currentUser.id as string
-        )
+        const response = await dashboardService.getTeacherDashboard()
         setDashboardData(response.data)
       } catch (err) {
-        setError("Failed to load dashboard data")
+        const axiosError = err as AxiosError<{ message: string }>
+        setError(
+          axiosError.response?.data?.message ?? "Failed to load dashboard data",
+        )
         console.error(err)
       } finally {
         setLoading(false)
       }
     }
+
     fetchDashboardData()
   }, [currentUser, router])
 
@@ -195,7 +200,7 @@ const TeacherDashboard = () => {
 
   const totalStudents = courseEnrollments.reduce(
     (sum: number, course: CourseEnrollment) => sum + course.studentCount,
-    0
+    0,
   )
 
   const averageAttendance =
@@ -204,8 +209,8 @@ const TeacherDashboard = () => {
           attendanceSummary.reduce(
             (sum: number, course: AttendanceSummary) =>
               sum + course.attendanceRate,
-            0
-          ) / attendanceSummary.length
+            0,
+          ) / attendanceSummary.length,
         )
       : 0
 
@@ -296,7 +301,7 @@ const TeacherDashboard = () => {
             {courses.map((course: Course) => {
               const enrollment = courseEnrollments.find(
                 (e: CourseEnrollment) =>
-                  e.courseId.toString() === course._id.toString()
+                  e.courseId.toString() === course._id.toString(),
               )
               return (
                 <Card key={course._id}>
@@ -324,7 +329,7 @@ const TeacherDashboard = () => {
                               {Math.round(
                                 ((enrollment?.studentCount || 0) /
                                   course.capacity) *
-                                  100
+                                  100,
                               )}
                               %
                             </span>
@@ -385,7 +390,7 @@ const TeacherDashboard = () => {
                         variant={
                           new Date(assignment.dueDate) <=
                           new Date(
-                            new Date().getTime() + 2 * 24 * 60 * 60 * 1000
+                            new Date().getTime() + 2 * 24 * 60 * 60 * 1000,
                           )
                             ? "destructive"
                             : "secondary"

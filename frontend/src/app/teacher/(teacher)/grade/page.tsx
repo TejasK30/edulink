@@ -48,13 +48,13 @@ export default function TeacherGradingPage() {
   const [courses, setCourses] = useState<Course[]>([])
   const [selectedCourse, setSelectedCourse] = useState<string>("")
   const [gradeType, setGradeType] = useState<"assignment" | "exam">(
-    "assignment"
+    "assignment",
   )
   const [assignments, setAssignments] = useState<Assignment[]>([])
   const [selectedAssignment, setSelectedAssignment] = useState<string>("")
   const [students, setStudents] = useState<Student[]>([])
   const [gradeEntries, setGradeEntries] = useState<Record<string, GradeEntry>>(
-    {}
+    {},
   )
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
 
@@ -62,10 +62,10 @@ export default function TeacherGradingPage() {
     const fetchCourses = async () => {
       try {
         const response = await api.get(
-          `/assignments/courses/teacher/${teacherId}`
+          `/assignments/courses/teacher/${teacherId}`,
         )
         setCourses(response.data)
-      } catch (error: any) {
+      } catch (error) {
         toast("Failed to load your courses. Please try again.")
       }
     }
@@ -78,10 +78,11 @@ export default function TeacherGradingPage() {
     const fetchStudents = async () => {
       try {
         const response = await api.get(
-          `/teacher/courses/${selectedCourse}/enrolled-students`
+          `/teacher/courses/${selectedCourse}/enrolled-students`,
         )
         setStudents(response.data)
-      } catch (error: any) {
+      } catch (error) {
+        console.error(error)
         toast("Failed to load enrolled students. Please try again.")
       }
     }
@@ -96,7 +97,8 @@ export default function TeacherGradingPage() {
       try {
         const response = await api.get(`/assignments/course/${selectedCourse}`)
         setAssignments(response.data)
-      } catch (error: any) {
+      } catch (error) {
+        console.error(error)
         toast("Failed to load assignments. Please try again.")
       }
     }
@@ -142,7 +144,7 @@ export default function TeacherGradingPage() {
       }
       const response = await api.post(
         `/teacher/grade-students/${teacherId}`,
-        payload
+        payload,
       )
       if (response.data.success) {
         toast("Grades assigned successfully.")
@@ -151,8 +153,9 @@ export default function TeacherGradingPage() {
       } else {
         toast("Failed to assign grades.")
       }
-    } catch (error: any) {
-      toast("Error assigning grades: " + error.message)
+    } catch (error) {
+      console.error(error)
+      toast("Error assigning grades")
     } finally {
       setIsSubmitting(false)
     }

@@ -59,7 +59,7 @@ export default function CreateAnnouncementForm() {
       form.reset()
       router.push("/admin/announcements/get")
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error("Error creating announcement:", error)
       toast.error("Failed to create announcement. Please try again.")
     },
