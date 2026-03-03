@@ -44,7 +44,6 @@ export default function CreateAssignmentPage() {
         setTeacherCourses(response.data)
       } catch (error) {
         toast("Failed to load your courses. Please try again.")
-        console.log(error)
       }
     }
     fetchCourses()

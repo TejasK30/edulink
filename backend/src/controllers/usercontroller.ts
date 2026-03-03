@@ -3,11 +3,10 @@ import User from "../models/user"
 
 export const getUsersByRole = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   try {
     const { role, collegeId } = req.query
-    console.log(role, collegeId)
     if (!role || !collegeId) {
       return res
         .status(400)

@@ -68,13 +68,27 @@ export const welcomeTemplate = `
       <p>Your account has been successfully created, and you can now access all the features and resources available to you.</p>
       <p>Here's what you need to know:</p>
       <ul>
-        <li>Your username: <strong>{{username}}</strong></li>
         <li>Your role: <strong>{{role}}</strong></li>
         <li>Your college: <strong>{{college}}</strong></li>
       </ul>
       <p>To get started, click the button below to login to your account:</p>
       <div style="text-align: center;">
-        <a href="{{loginUrl}}" class="button">Login to EduLink</a>
+        <a 
+          href="{{loginUrl}}" 
+          style="
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #4F46E5;
+            color: #ffffff !important;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px 0;
+          "
+        >
+          Login to EduLink
+        </a>
       </div>
       <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
       <p>Best regards,<br>The EduLink Team</p>

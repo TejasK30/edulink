@@ -17,15 +17,13 @@ interface TeachersApiResponse {
 }
 
 export const useTeachers = (
-  collegeId: string | undefined
+  collegeId: string | undefined,
 ): UseQueryResult<Teacher[], Error> => {
-  console.log(collegeId)
-
   return useQuery({
     queryKey: ["teachers", collegeId],
     queryFn: async (): Promise<Teacher[]> => {
       const response = await api.get<TeachersApiResponse>(
-        `/users?role=teacher&collegeId=${collegeId}`
+        `/users?role=teacher&collegeId=${collegeId}`,
       )
 
       return response.data.users || []
@@ -49,7 +47,7 @@ export const useFeedbackSubmission = (): UseMutationResult<
     }): Promise<FeedbackResponse> => {
       const response = await api.post<FeedbackResponse>(
         `/feedback/${userId}`,
-        payload
+        payload,
       )
       return response.data
     },

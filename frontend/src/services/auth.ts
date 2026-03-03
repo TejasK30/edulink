@@ -28,7 +28,7 @@ type LoginResponse =
 
 export const login = async (
   email: string,
-  password: string
+  password: string,
 ): Promise<LoginResponse> => {
   try {
     const response = await api.post("/auth/login", {
@@ -108,11 +108,9 @@ export const registerAdminWithCollege = async (data: AdminRegisterData) => {
 
 export const logout = async () => {
   try {
-    console.log("in log out function")
     await api.post("/auth/logout")
     toast("Logged out")
   } catch (error) {
-    console.log(error)
     toast("failed to log out")
   }
 }

@@ -8,7 +8,7 @@ const FEEDBACK_TYPE_COLLEGE = "college"
 
 export const submitFeedback = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   try {
     const { studentId } = req.params
@@ -106,7 +106,7 @@ export const submitFeedback = async (
 
 export const getStudentFeedbacks = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   try {
     const { studentId } = req.params
@@ -138,7 +138,7 @@ export const getStudentFeedbacks = async (
       } catch (parseError) {
         console.error(
           `Error parsing feedback message for ID ${feedback._id}:`,
-          parseError
+          parseError,
         )
         return {
           id: feedback._id,
@@ -168,7 +168,7 @@ export const getStudentFeedbacks = async (
 
 export const getTeacherFeedbacks = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   try {
     const { teacherId } = req.params
@@ -212,7 +212,7 @@ export const getTeacherFeedbacks = async (
       } catch (parseError) {
         console.error(
           `Error parsing teacher feedback message for ID ${feedback._id}:`,
-          parseError
+          parseError,
         )
         return {
           id: feedback._id,
@@ -255,10 +255,9 @@ interface FeedbackAnalytics {
 
 export const getCollegeFeedbackAnalytics = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   const { userid } = req.params
-  console.log(userid)
 
   if (!mongoose.Types.ObjectId.isValid(userid)) {
     return res.status(400).json({ message: "Invalid user ID format." })

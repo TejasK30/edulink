@@ -60,8 +60,6 @@ const AttendanceMarkingComponent = () => {
   const [isDatePickerOpen, setIsDatePickerOpen] = useState<boolean>(false)
   const { user: currentUser } = useAuth()
 
-  console.log(currentUser)
-
   const teacherId = currentUser?.id
 
   useEffect(() => {
@@ -73,7 +71,7 @@ const AttendanceMarkingComponent = () => {
         }
 
         const response = await api.get(
-          `/attendance/teacher/courses/${teacherId}`
+          `/attendance/teacher/courses/${teacherId}`,
         )
         setTeacherCourses(response.data)
       } catch (error) {
@@ -93,7 +91,7 @@ const AttendanceMarkingComponent = () => {
       if (selectedCourse) {
         try {
           const response = await api.get(
-            `/attendance/courses/${selectedCourse}/students`
+            `/attendance/courses/${selectedCourse}/students`,
           )
           setStudents(response.data)
 
@@ -101,7 +99,7 @@ const AttendanceMarkingComponent = () => {
             (student: Student) => ({
               studentId: student._id,
               status: "present",
-            })
+            }),
           )
           setAttendanceRecords(initialAttendance)
         } catch (error) {
@@ -127,8 +125,8 @@ const AttendanceMarkingComponent = () => {
               ...record,
               status: record.status === "present" ? "absent" : "present",
             }
-          : record
-      )
+          : record,
+      ),
     )
   }
 
@@ -151,7 +149,7 @@ const AttendanceMarkingComponent = () => {
     }
 
     const selectedCourseDetails = teacherCourses.find(
-      (course) => course._id === selectedCourse
+      (course) => course._id === selectedCourse,
     )
     if (!selectedCourseDetails?.departmentId?._id) {
       toast.error("Department information for the course is missing")
@@ -230,7 +228,7 @@ const AttendanceMarkingComponent = () => {
               <TableBody>
                 {students.map((student) => {
                   const attendanceRecord = attendanceRecords.find(
-                    (record) => record.studentId === student._id
+                    (record) => record.studentId === student._id,
                   )
                   return (
                     <TableRow key={student._id}>

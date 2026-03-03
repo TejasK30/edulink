@@ -5,7 +5,6 @@ export const dashboardService = {
     return api.get(`/dashboard/student/`)
   },
   getTeacherDashboard: () => {
-    console.log(api)
     return api.get(`/dashboard/teacher`)
   },
   getAdminDashboard: () => {

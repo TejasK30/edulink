@@ -6,12 +6,10 @@ import User from "../models/user"
 
 export const getTeacherCourses = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   try {
     const { teacherId } = req.params
-
-    console.log(teacherId)
 
     if (!teacherId) {
       return res.status(401).json({ message: "Unauthorized" })
@@ -35,7 +33,7 @@ export const getTeacherCourses = async (
 
 export const getStudentsByCourse = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   try {
     const courseId = req.params.courseId
@@ -45,7 +43,7 @@ export const getStudentsByCourse = async (
 
     const course = await Course.findById(courseId).populate(
       "enrolledStudents",
-      "name email"
+      "name email",
     )
     if (!course) {
       return res.status(404).json({ message: "Course not found" })
@@ -66,7 +64,7 @@ interface AttendanceRecordDTO {
 }
 export const markAttendance = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   try {
     const teacherId = req.params.teacherId

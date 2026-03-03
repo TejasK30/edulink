@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs"
 import { Request, Response } from "express"
 import jwt from "jsonwebtoken"
-import mongoose from "mongoose"
+import mongoose, { Collection } from "mongoose"
 import { z } from "zod"
 import { redis } from "../config/redis"
 import College, { ICollege } from "../models/College"
@@ -12,10 +12,11 @@ import {
   loginSchema,
   userRegistrationSchema,
 } from "../schema/auth.schema"
+import { addEmailJob } from "../config/emailQueue"
 
 export const registerUser = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   try {
     const validatedData = userRegistrationSchema.parse(req.body)
@@ -87,6 +88,27 @@ export const registerUser = async (
       })
     }
 
+    const college = await College.findOne({ _id: savedUser.college })
+
+    if (!college) {
+      throw new Error("College not found")
+    }
+
+    // send welcome email
+    await addEmailJob({
+      user: {
+        email: savedUser.email,
+        name: savedUser.name,
+      },
+      template: "welcome",
+      data: {
+        name: savedUser.name,
+        email: savedUser.email,
+        role: savedUser.role,
+        college: college.collegeName,
+        loginUrl: `${process.env.FRONTEND_URL}/login`,
+      },
+    })
     return res
       .status(201)
       .json({ message: "Registration successful", success: true })
@@ -105,7 +127,7 @@ export const registerUser = async (
 
 const registerAdminWithCollege = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   try {
     const validatedData = adminRegistrationSchema.parse(req.body)
@@ -205,12 +227,12 @@ const registerAdminWithCollege = async (
           teachers: [],
         }))
         const createdDepartments = (await Department.insertMany(
-          departmentDocs
+          departmentDocs,
         )) as IDepartment[]
         departmentIds.push(
           ...createdDepartments.map(
-            (dept) => dept._id as mongoose.Types.ObjectId
-          )
+            (dept) => dept._id as mongoose.Types.ObjectId,
+          ),
         )
         await College.findByIdAndUpdate(savedCollege._id, {
           $push: { departments: { $each: departmentIds } },
@@ -290,8 +312,6 @@ const loginUser = async (req: Request, res: Response): Promise<any> => {
         .json({ message: "Invalid credentials", success: false })
     }
 
-    console.log(user.college.id)
-
     const token = jwt.sign(
       {
         id: user._id,
@@ -299,7 +319,7 @@ const loginUser = async (req: Request, res: Response): Promise<any> => {
         collegeId: user.college.id,
       },
       process.env.JWT_SECRET || "your-secret-key",
-      { expiresIn: "24h" }
+      { expiresIn: "24h" },
     )
 
     res.cookie("token", token, {
@@ -362,7 +382,7 @@ const logoutUser = (req: Request, res: Response): void => {
 
 export const getDepartmentsByCollege = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   try {
     const { collegeId } = req.params
@@ -393,10 +413,8 @@ export const getProfile = async (req: Request, res: Response): Promise<any> => {
     }
 
     const user = await User.findById(req.user.id).select(
-      "_id role name email college"
+      "_id role name email college",
     )
-
-    console.log("auth get user: ", user)
 
     if (!user) {
       return res.status(404).json({ message: "User not found" })

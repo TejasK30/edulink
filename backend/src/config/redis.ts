@@ -1,8 +1,7 @@
-import Redis from "ioredis"
+import IORedis from "ioredis"
 
-const redis = new Redis({
+export const redis = new IORedis({
   host: "localhost",
   port: 6379,
+  maxRetriesPerRequest: null,
 })
-
-export { redis }

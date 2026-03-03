@@ -20,12 +20,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   } = useQuery({
     queryKey: ["auth-get-user"],
     queryFn: async () => {
-      console.log("Fetching user profile...")
       try {
         const response = await api.get("/auth/profile/me")
-
-        console.log("auth get user: ", response.data)
-
         return response.data
       } catch (error) {
         console.error("Error fetching user profile:", error)

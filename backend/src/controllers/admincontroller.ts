@@ -15,13 +15,10 @@ import { createUserSchema, updateUserSchema } from "../schema/admin.schema"
 
 export const createUser = async (req: Request, res: Response): Promise<any> => {
   try {
-    console.log(req.body)
-
     const validatedData = createUserSchema.parse(req.body)
     const { name, email, password, role, department } = validatedData
 
     const collegeId = req.params.collegeId as string
-    console.log("Received collegeid:", collegeId)
     if (!collegeId) {
       return res
         .status(400)
@@ -63,7 +60,7 @@ export const createUser = async (req: Request, res: Response): Promise<any> => {
             [role === UserRole.TEACHER ? "teachers" : "students"]: newUser._id,
           },
         },
-        { new: true }
+        { new: true },
       )
     }
 
@@ -79,7 +76,7 @@ export const createUser = async (req: Request, res: Response): Promise<any> => {
     await College.findByIdAndUpdate(
       collegeObjId,
       { $push: { [collegeField]: newUser._id } },
-      { new: true }
+      { new: true },
     )
 
     return res.status(201).json(newUser)
@@ -96,7 +93,7 @@ export const createUser = async (req: Request, res: Response): Promise<any> => {
 
 export const getStudents = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   try {
     const collegeId = req.params.collegeId
@@ -116,7 +113,7 @@ export const getStudents = async (
 
 export const getTeachers = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   try {
     const collegeId = req.params.collegeId
@@ -151,7 +148,7 @@ export const getAdmins = async (req: Request, res: Response): Promise<any> => {
 
 export const getAllUsers = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   try {
     const users = await User.find()
@@ -164,7 +161,7 @@ export const getAllUsers = async (
 
 export const getUserById = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   try {
     const user = await User.findById(req.params.id)
@@ -227,7 +224,7 @@ export const updateUser = async (req: Request, res: Response): Promise<any> => {
     const updatedUser = await User.findByIdAndUpdate(
       req.params.id,
       updateData,
-      { new: true }
+      { new: true },
     )
     if (!updatedUser) {
       return res.status(404).json({ message: "User not found" })
@@ -258,7 +255,7 @@ export const deleteUser = async (req: Request, res: Response): Promise<any> => {
 }
 export const adminDashboard = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   try {
     const collegeId = req.user?.collegeId
@@ -296,7 +293,7 @@ export const adminDashboard = async (
 
 export const createAnnouncement = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   try {
     const { collegeId, title, content, departmentId } = req.body
@@ -330,7 +327,7 @@ export const createAnnouncement = async (
 
 export const getAnnounceMents = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   try {
     const collegeId = req.user?.collegeId
@@ -350,7 +347,7 @@ export const getAnnounceMents = async (
 
 export const createSemester = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   try {
     const { collegeId } = req.params
@@ -382,7 +379,7 @@ export const createSemester = async (
 
 export const toggleSemesterStatus = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   try {
     const { id } = req.params
@@ -393,7 +390,7 @@ export const toggleSemesterStatus = async (
     const semester = await Semester.findByIdAndUpdate(
       id,
       { isActive },
-      { new: true }
+      { new: true },
     )
     if (!semester) {
       return res.status(404).json({ message: "Semester not found." })
@@ -409,7 +406,7 @@ export const toggleSemesterStatus = async (
 
 export const getSemestersByCollege = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   try {
     const { collegeId } = req.params
@@ -431,7 +428,7 @@ export const createJobPostingByAdmin = async (
     {},
     Omit<JobPostingDocument, "postedBy" | "role" | "createdAt">
   >,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   try {
     const { adminId } = req.params
@@ -465,7 +462,7 @@ export const createJobPostingByAdmin = async (
 
 export const getJobsByCollegeAdmin = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   try {
     const { collegeId } = req.params
@@ -492,7 +489,7 @@ const ALLOWED_ROLES = ["admin", "teacher", "student"] as const
 type Role = (typeof ALLOWED_ROLES)[number]
 export const getDetailedUserByRole = async (
   req: Request<{ role: string; id: string }>,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   const { role, id } = req.params
 

@@ -4,17 +4,7 @@ import FeaturesSection from "@/components/website/FeaturesSection"
 import HeroSection from "@/components/website/HeroSection"
 import Navbar from "@/components/website/Navbar"
 import TestimonialsSection from "@/components/website/TestimonialsSection"
-import { useEffect } from "react"
 const HomePage = () => {
-  useEffect(() => {
-    fetch("http://localhost:5000/test-cookie", {
-      method: "GET",
-      credentials: "include",
-    }).then(() => {
-      console.log("Request sent")
-    })
-  }, [])
-
   return (
     <div className="min-h-screen">
       <Navbar />

@@ -10,7 +10,7 @@ import Semester from "../models/Semester"
 
 export const getStudentDepartment = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   try {
     const { departmentId } = req.params
@@ -32,16 +32,15 @@ export const getStudentDepartment = async (
 
 export const getCoursesByDepartmentId = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   try {
     const { departmentId } = req.params
     if (!departmentId || !Types.ObjectId.isValid(departmentId)) {
       return res.status(400).json({ message: "Invalid Department ID." })
     }
-    const department = await Department.findById(departmentId).populate(
-      "subjects"
-    )
+    const department =
+      await Department.findById(departmentId).populate("subjects")
     if (!department) {
       return res.status(404).json({ message: "Department not found." })
     }
@@ -56,7 +55,7 @@ export const getCoursesByDepartmentId = async (
 
 export const getStudentAssignments = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   try {
     const studentId = req.params.studentId
@@ -82,7 +81,7 @@ export const getStudentAssignments = async (
     }
 
     const enrolledCourseIds = student.enrolledCourses.map((courseId: any) =>
-      courseId.toString()
+      courseId.toString(),
     )
 
     const query: any = { courseId: { $in: enrolledCourseIds } }
@@ -113,7 +112,7 @@ export const getStudentAssignments = async (
       name: courseNameMap[courseId] || "Unknown Course",
       assignments: groupedAssignments[courseId].filter(
         (assignment) =>
-          !subjectId || assignment.courseId.toString() === subjectId
+          !subjectId || assignment.courseId.toString() === subjectId,
       ),
     }))
 
@@ -129,7 +128,7 @@ export const getStudentAssignments = async (
 
 export const bulkEnrollStudentInSemester = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   try {
     const { studentId } = req.params
@@ -167,8 +166,8 @@ export const bulkEnrollStudentInSemester = async (
     const updatePromises = newCoursesToEnroll.map((course) =>
       Course.updateOne(
         { _id: course._id },
-        { $addToSet: { enrolledStudents: studentId } }
-      )
+        { $addToSet: { enrolledStudents: studentId } },
+      ),
     )
     await Promise.all(updatePromises)
 
@@ -201,7 +200,7 @@ export const bulkEnrollStudentInSemester = async (
 
 export const getEnrolledCourses = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   try {
     const { studentId } = req.params
@@ -228,7 +227,7 @@ export const getEnrolledCourses = async (
 
 export const getStudentAttendance = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   try {
     const { studentId } = req.params
@@ -257,7 +256,7 @@ export const getStudentAttendance = async (
 
     const totalClasses = attendanceRecords.length
     const presentClasses = attendanceRecords.filter(
-      (record) => record.status === "present"
+      (record) => record.status === "present",
     ).length
     const attendancePercentage =
       totalClasses > 0 ? (presentClasses / totalClasses) * 100 : 0
@@ -286,11 +285,10 @@ export const getStudentAttendance = async (
 
 export const getJobsByCollegeForStudent = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   try {
     const { collegeId } = req.params
-    console.log(collegeId)
     if (!collegeId) {
       return res.status(400).json({ message: "College ID is required" })
     }
@@ -311,12 +309,11 @@ export const getJobsByCollegeForStudent = async (
 
 export const getSemestersByCollegeForStudent = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   try {
     const { collegeId } = req.params
 
-    console.log(collegeId)
     if (!collegeId)
       return res.status(400).json({ message: "College ID is required" })
     const semesters = await Semester.find({ collegeId })

@@ -12,11 +12,9 @@ export interface JwtPayload {
 export const authenticate = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<any> => {
   const token = req.cookies.token
-
-  console.log(token)
 
   if (!token) {
     return res.status(401).json({ message: "Access token missing" })

@@ -1,3 +1,4 @@
+import { populate } from "dotenv"
 import mongoose, { Schema, Document } from "mongoose"
 
 export enum UserRole {
@@ -34,11 +35,16 @@ const UserSchema: Schema = new Schema(
       enum: Object.values(UserRole),
       default: UserRole.STUDENT,
     },
-    college: { type: Schema.Types.ObjectId, ref: "College", required: true },
+    college: {
+      type: Schema.Types.ObjectId,
+      ref: "College",
+      required: true,
+      populate: true,
+    },
     department: { type: Schema.Types.ObjectId, ref: "Department" },
     enrolledCourses: [{ type: Schema.Types.ObjectId, ref: "Course" }],
   },
-  { timestamps: true }
+  { timestamps: true },
 )
 
 const User = mongoose.model<UserModel>("User", UserSchema)

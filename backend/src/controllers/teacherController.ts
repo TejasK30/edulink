@@ -9,7 +9,7 @@ import JobPosting from "../models/JobPosting"
 
 export const createAssignment = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   try {
     const {
@@ -75,7 +75,7 @@ export const createAssignment = async (
 
 export const getTeacherAssignments = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   try {
     const teacherId = req.params.teacherId
@@ -100,7 +100,7 @@ export const getTeacherAssignments = async (
 
 export const getAssignmentById = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   try {
     const assignmentId = req.params.assignmentId
@@ -127,7 +127,7 @@ export const getAssignmentById = async (
 
 export const getDepartmentCourses = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   try {
     const { departmentId } = req.params
@@ -149,7 +149,7 @@ export const getDepartmentCourses = async (
 }
 export const assignCourseToTeacher = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   try {
     const { teacherId } = req.params
@@ -171,7 +171,7 @@ export const assignCourseToTeacher = async (
     const updatedCourse = await Course.findByIdAndUpdate(
       courseId,
       { teacherId: teacherId },
-      { new: true }
+      { new: true },
     )
 
     if (!updatedCourse) {
@@ -193,7 +193,7 @@ export const assignCourseToTeacher = async (
 
 export const getTeacherDepartments = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   try {
     const { teacherId } = req.params
@@ -219,13 +219,11 @@ export const getTeacherDepartments = async (
 
 export const gradeStudentsInCourse = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   try {
     const { teacherId } = req.params
     const { courseId, gradeType, assignmentId, grades } = req.body
-
-    console.log("Request Body:", req.body)
 
     const teacher = await User.findById(teacherId)
     if (!teacher || teacher.role !== UserRole.TEACHER) {
@@ -283,7 +281,7 @@ export const gradeStudentsInCourse = async (
 
 export const getEnrolledStudentsForCourse = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   try {
     const { courseId } = req.params
@@ -292,7 +290,7 @@ export const getEnrolledStudentsForCourse = async (
     }
     const course = await Course.findById(courseId).populate(
       "enrolledStudents",
-      "name email"
+      "name email",
     )
     if (!course) return res.status(404).json({ message: "Course not found" })
     return res.status(200).json(course.enrolledStudents)
@@ -307,7 +305,7 @@ export const getEnrolledStudentsForCourse = async (
 export const createJobPostingTeacher = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<any> => {
   try {
     const { teacherId } = req.params
@@ -349,7 +347,7 @@ export const createJobPostingTeacher = async (
 
 export const getJobsByCollegeTeacher = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<any> => {
   try {
     const { collegeId } = req.params

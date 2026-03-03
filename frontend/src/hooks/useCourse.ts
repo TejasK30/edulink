@@ -41,7 +41,6 @@ export const useTeachers = (collegeId: string | undefined) => {
           collegeId,
         },
       })
-      console.log("hook teachers response: ", response.data)
       return response.data as Teacher[]
     },
     enabled: !!collegeId,
